@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.LiftMate" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/lm_bg_deep</item>
+        <item name="android:statusBarColor">@color/lm_bg_deep</item>
+        <item name="android:navigationBarColor">@color/lm_bg_deep</item>
+        <item name="android:colorAccent">@color/lm_cyan</item>
+        <item name="android:textColorPrimary">@color/lm_text_primary</item>
+        <item name="android:textColorSecondary">@color/lm_text_secondary</item>
+    </style>
+</resources>

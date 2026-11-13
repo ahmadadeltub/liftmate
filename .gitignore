@@ -1,0 +1,21 @@
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# Python caches & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+**/.pytest_cache/
+.venv/
+**/.venv/
+
+# Android / Gradle local caches & build outputs (source + signed APK in LiftMate-Control-Center/android/ stay tracked)
+LiftMate-Android/.gradle/
+LiftMate-Android/.kotlin/
+LiftMate-Android/build/
+LiftMate-Android/app/build/
+LiftMate-Android/local.properties
+.idea/
+*.iml

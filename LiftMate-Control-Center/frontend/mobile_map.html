@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>LiftMate Mobile Map</title>
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
+  <style>
+    :root[data-theme="dark"] {
+      --bg-map: #070d1b;
+      --bg-card: rgba(16, 24, 44, 0.94);
+      --border: rgba(148, 163, 184, 0.25);
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --ctrl-bg: rgba(15, 23, 42, 0.9);
+      --ctrl-fg: #e2e8f0;
+    }
+    :root[data-theme="light"] {
+      --bg-map: #e2e8f0;
+      --bg-card: rgba(255, 255, 255, 0.96);
+      --border: rgba(15, 23, 42, 0.14);
+      --text-main: #0f172a;
+      --text-sub: #475569;
+      --ctrl-bg: rgba(255, 255, 255, 0.94);
+      --ctrl-fg: #0f172a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg-map);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    }
+    #liftmateOfflineMap {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-map);
+    }
+    .leaflet-bar a,
+    .leaflet-control-layers-toggle {
+      background-color: var(--ctrl-bg) !important;
+      color: var(--ctrl-fg) !important;
+      border-color: var(--border) !important;
+    }
+    .leaflet-control-layers-expanded {
+      background: var(--ctrl-bg) !important;
+      color: var(--ctrl-fg) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 12px !important;
+    }
+    .leaflet-control-attribution {
+      background: var(--ctrl-bg) !important;
+      color: var(--text-sub) !important;
+      font-size: 9px !important;
+    }
+
+    /* Sustainability modal (shown when Car Repaired is tapped) */
+    .sust-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(3, 7, 18, 0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+    .sust-modal-backdrop.open { display: flex; }
+    .sust-modal-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--bg-card);
+      border: 1.5px solid #10b981;
+      border-radius: 18px;
+      padding: 14px;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 12px;
+    }
+    .sust-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 800;
+      font-size: 14px;
+    }
+    .sust-badges { display: flex; gap: 8px; }
+    .sust-metric {
+      flex: 1;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.16);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      font-weight: 800;
+      text-align: center;
+      font-size: 11px;
+    }
+    .sust-box {
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      line-height: 1.4;
+      font-size: 11px;
+    }
+    .sust-box h4 { color: var(--text-main); margin-bottom: 4px; font-size: 11.5px; }
+    .sust-actions { display: flex; gap: 8px; }
+    .sust-btn-keep, .sust-btn-remove, .theme-btn {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .sust-btn-keep { flex: 1; background: #10b981; color: #fff; border: none; }
+    .sust-btn-remove { flex: 1; background: #ef4444; color: #fff; border: none; }
+    .theme-btn { background: transparent; color: var(--text-main); padding: 4px 8px; }
+  </style>
+</head>
+<body>
+  <div id="liftmateOfflineMap"></div>
+
+  <div class="sust-modal-backdrop" id="sustainableRepairModal" onclick="if(event.target===this) window.liftmateMap && window.liftmateMap.closeSustainableRepairModal()">
+    <div class="sust-modal-card">
+      <div class="sust-header">
+        <span>🌱 <span id="sustModalPinLabel">Car Repair Completed</span></span>
+        <button class="theme-btn" onclick="window.liftmateMap && window.liftmateMap.closeSustainableRepairModal()">✕</button>
+      </div>
+      <div class="sust-badges">
+        <div class="sust-metric" id="sustModalCount">1 Car Repaired</div>
+        <div class="sust-metric" id="sustModalCo2">4.2 kg CO₂ Saved</div>
+      </div>
+      <div class="sust-box">
+        <h4>♻️ Sustainability Impact</h4>
+        100% electric zero-emission LiftMate actuators eliminate diesel tow-truck dispatch and hydraulic leaks while keeping mechanics safely clear of crush zones.
+      </div>
+      <div class="sust-actions">
+        <button class="sust-btn-keep" onclick="window.liftmateMap && window.liftmateMap.closeSustainableRepairModal()">✅ Keep Pin</button>
+        <button class="sust-btn-remove" id="sustModalRemoveBtn">🗑️ Remove Pin</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/leaflet/leaflet.js"></script>
+  <script src="/js/liftmate_offline_map.js"></script>
+  <script>
+    window.setAppTheme = function (theme) {
+      document.documentElement.setAttribute("data-theme", theme === "light" ? "light" : "dark");
+    };
+    window.invalidateMapSize = function () {
+      if (window.liftmateMap && window.liftmateMap.map) {
+        window.liftmateMap.map.invalidateSize();
+      }
+    };
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      window.setAppTheme(params.get("theme") || "dark");
+      if (window.LiftMateOfflineMap) {
+        window.liftmateMap = new window.LiftMateOfflineMap("liftmateOfflineMap");
+      }
+    })();
+  </script>
+</body>
+</html>

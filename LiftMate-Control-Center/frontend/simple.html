@@ -1,0 +1,2347 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>LiftMate</title>
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
+  <style>
+    /* ==================== MODERN AI DARK & LIGHT THEMES ==================== */
+    :root[data-theme="dark"] {
+      --bg-outer: #03050a;
+      --bg-app: radial-gradient(circle at 50% 0%, #111a36 0%, #060913 65%);
+      --bg-card: rgba(20, 30, 58, 0.68);
+      --bg-track: rgba(8, 13, 26, 0.88);
+      --border-glass: rgba(99, 102, 241, 0.26);
+      --border-subtle: rgba(255, 255, 255, 0.09);
+      --text-main: #ffffff;
+      --text-sub: #94a3b8;
+      --accent-gradient: linear-gradient(135deg, #00f0ff 0%, #6366f1 100%);
+      --servo-gradient: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      --shadow-shell: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 44px rgba(99, 102, 241, 0.14);
+      --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.32);
+      --btn-surface: rgba(30, 41, 69, 0.78);
+    }
+
+    :root[data-theme="light"] {
+      --bg-outer: #dfe7f2;
+      --bg-app: radial-gradient(circle at 50% 0%, #ffffff 0%, #eef2f8 70%);
+      --bg-card: rgba(255, 255, 255, 0.92);
+      --bg-track: #e2e8f0;
+      --border-glass: rgba(99, 102, 241, 0.2);
+      --border-subtle: rgba(15, 23, 42, 0.08);
+      --text-main: #0f172a;
+      --text-sub: #64748b;
+      --accent-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      --servo-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+      --shadow-shell: 0 20px 50px rgba(15, 23, 42, 0.14);
+      --shadow-card: 0 8px 20px rgba(15, 23, 42, 0.06);
+      --btn-surface: #f1f5f9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background: var(--bg-outer);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
+      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    /* ==================== FLUID MOBILE APP SHELL (FITS ALL SCREEN SIZES) ==================== */
+    .mobile-shell {
+      width: 100%;
+      max-width: 480px;
+      height: 100%;
+      height: 100dvh;
+      background: var(--bg-app);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: clamp(6px, 1.2dvh, 12px);
+      padding:
+        max(8px, env(safe-area-inset-top))
+        clamp(10px, 3vw, 16px)
+        max(10px, env(safe-area-inset-bottom));
+      box-shadow: var(--shadow-shell);
+      overflow: hidden;
+    }
+
+    @media (min-width: 520px) and (min-height: 700px) {
+      .mobile-shell {
+        height: min(95dvh, 880px);
+        border-radius: 36px;
+        border: 1px solid var(--border-glass);
+      }
+    }
+
+    /* ==================== MINIMAL HEADER ==================== */
+    .top-bar {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 2px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-icon {
+      width: clamp(30px, 4.2dvh, 36px);
+      height: clamp(30px, 4.2dvh, 36px);
+      border-radius: 10px;
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: clamp(12px, 1.8dvh, 15px);
+      box-shadow: 0 4px 14px rgba(0, 240, 255, 0.35);
+    }
+
+    .brand-title {
+      font-size: clamp(16px, 2.3dvh, 20px);
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-btn {
+      width: clamp(32px, 4.4dvh, 38px);
+      height: clamp(32px, 4.4dvh, 38px);
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: clamp(14px, 2dvh, 16px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .reset-btn {
+      height: clamp(32px, 4.4dvh, 38px);
+      padding: 0 clamp(10px, 3vw, 15px);
+      border-radius: 10px;
+      border: 1px solid var(--border-glass);
+      background: var(--accent-gradient);
+      color: #fff;
+      font-size: clamp(11px, 1.6dvh, 13px);
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 240, 255, 0.3);
+      transition: transform 0.1s ease, box-shadow 0.15s ease;
+    }
+    .reset-btn:active,
+    .reset-btn.active {
+      transform: scale(0.95);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.75);
+    }
+
+    .stop-btn {
+      height: clamp(32px, 4.4dvh, 38px);
+      padding: 0 clamp(12px, 3.5vw, 18px);
+      border-radius: 10px;
+      border: 2px solid transparent;
+      background: linear-gradient(135deg, #ff4b4b 0%, #dc2626 100%);
+      color: #fff;
+      font-size: clamp(11px, 1.6dvh, 13px);
+      font-weight: 900;
+      letter-spacing: 0.6px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.45);
+      transition: transform 0.1s ease, box-shadow 0.15s ease;
+    }
+    .stop-btn:active,
+    .stop-btn.active {
+      border-color: #ffffff;
+      box-shadow: 0 0 24px rgba(255, 75, 75, 0.9);
+      transform: scale(0.96);
+    }
+
+    /* ==================== RESPONSIVE CONTENT GRID ==================== */
+    .main-stack {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 12px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 12px;
+    }
+    .main-stack::-webkit-scrollbar {
+      width: 4px;
+    }
+    .main-stack::-webkit-scrollbar-thumb {
+      background: var(--border-glass);
+      border-radius: 4px;
+    }
+
+    /* ==================== CLEAN CAMERA VIEWPORT ==================== */
+    .camera-card {
+      flex: 0 0 auto;
+      height: 245px;
+      width: 100%;
+      border-radius: clamp(16px, 2.5dvh, 22px);
+      overflow: hidden;
+      background: #050811;
+      border: 1px solid var(--border-glass);
+      box-shadow: var(--shadow-card);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .camera-card.cam-fullscreen {
+      position: fixed;
+      inset: 8px;
+      z-index: 9999;
+      width: calc(100vw - 16px);
+      height: calc(100dvh - 16px);
+      border-radius: 20px;
+      background: #03060d;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+    }
+
+    .cam-full-btn {
+      padding: 3px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(15, 23, 42, 0.62);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      color: #ffffff;
+      font-size: 7.5px;
+      font-weight: 800;
+      letter-spacing: 0.15px;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+    .cam-full-btn:hover,
+    .cam-full-btn:active {
+      transform: scale(0.96);
+      border-color: #00f0ff;
+      background: rgba(99, 102, 241, 0.85);
+    }
+
+    /* ==================== AI CAMERA VISION HUD & CONTROLS (INSIDE CAMERA CARD) ==================== */
+    .ai-cam-hud {
+      position: absolute;
+      top: 5px;
+      left: 6px;
+      z-index: 18;
+      background: rgba(6, 10, 22, 0.52);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1px solid rgba(0, 240, 255, 0.22);
+      border-radius: 7px;
+      padding: 2px 6px;
+      font-size: 7px;
+      line-height: 1.25;
+      font-weight: 700;
+      color: #e2e8f0;
+      pointer-events: none;
+    }
+    .ai-cam-hud .ai-hud-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .ai-cam-hud .ai-val {
+      color: #00f0ff;
+      font-weight: 800;
+    }
+    .ai-cam-hud .ai-val.off {
+      color: #94a3b8;
+    }
+    .ai-cam-hud .ai-val.warn {
+      color: #fbbf24;
+    }
+    .ai-cam-hud .ai-val.crit {
+      color: #ff4b4b;
+    }
+
+    .ai-top-right {
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      z-index: 19;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      max-width: 52%;
+    }
+
+    .ai-warning-banner {
+      display: none;
+      padding: 2px 5px;
+      border-radius: 6px;
+      font-size: 7px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      color: #ffffff;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .ai-warning-banner.show {
+      display: inline-block;
+    }
+    .ai-warning-banner.level-INFO {
+      background: rgba(8, 47, 73, 0.75);
+      border-color: #00f0ff;
+      color: #e0f2fe;
+    }
+    .ai-warning-banner.level-WARNING {
+      background: rgba(120, 53, 15, 0.82);
+      border-color: #f59e0b;
+      color: #fef3c7;
+    }
+    .ai-warning-banner.level-CRITICAL {
+      background: linear-gradient(135deg, rgba(220, 38, 38, 0.9), rgba(153, 27, 27, 0.9));
+      border-color: #ffffff;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.75);
+    }
+
+    .ai-mute-btn {
+      width: 19px;
+      height: 19px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(15, 23, 42, 0.62);
+      color: #ffffff;
+      font-size: 8.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+
+    .ai-region-strip {
+      position: absolute;
+      bottom: 24px;
+      left: 6px;
+      right: 6px;
+      z-index: 18;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+      pointer-events: none;
+    }
+    .ai-zone-pill {
+      background: rgba(6, 10, 22, 0.42);
+      border: 1px solid rgba(16, 185, 129, 0.28);
+      border-radius: 5px;
+      padding: 1px 3px;
+      text-align: center;
+      font-size: 6.5px;
+      font-weight: 700;
+      color: rgba(167, 243, 208, 0.9);
+      letter-spacing: 0.15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ai-zone-pill.blocked {
+      background: rgba(127, 29, 29, 0.72);
+      border-color: rgba(248, 113, 113, 0.65);
+      color: #fecaca;
+    }
+    .ai-zone-pill.unknown {
+      background: rgba(30, 41, 59, 0.52);
+      border-color: rgba(148, 163, 184, 0.3);
+      color: #cbd5e1;
+    }
+
+    .ai-cam-controls {
+      position: absolute;
+      bottom: 4px;
+      left: 5px;
+      right: 5px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 3px;
+    }
+    .ai-mode-group {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .ai-mode-group::-webkit-scrollbar {
+      display: none;
+    }
+    .ai-ctrl-btn {
+      padding: 2.5px 5px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(15, 23, 42, 0.62);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      color: #cbd5e1;
+      font-size: 7px;
+      font-weight: 800;
+      letter-spacing: 0.1px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.14s ease;
+    }
+    .ai-ctrl-btn.active {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.82) 0%, rgba(99, 102, 241, 0.82) 100%);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+    .ai-ctrl-btn.safety-active {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.85) 0%, rgba(5, 150, 105, 0.85) 100%);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.45);
+    }
+    .ai-ctrl-btn.locked {
+      opacity: 0.65;
+      border-style: dashed;
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fcd34d;
+    }
+    .ai-ctrl-btn.auto-active {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.92) 0%, rgba(5, 150, 105, 0.92) 100%);
+      color: #ffffff;
+      border-color: rgba(167, 243, 208, 0.75);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.55);
+    }
+    .auto-mode-btn {
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(15, 23, 42, 0.68);
+      color: #cbd5e1;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.16s ease;
+    }
+    .auto-mode-btn.active {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.92) 0%, rgba(5, 150, 105, 0.92) 100%);
+      color: #ffffff;
+      border-color: rgba(167, 243, 208, 0.78);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.45);
+    }
+
+    /* ==================== OFFLINE LIVE NAVIGATION MAP CARD ==================== */
+    .map-actions-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .map-pill-btn {
+      padding: 8px 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      background: var(--btn-surface);
+      color: var(--text-main);
+      font-size: clamp(10.5px, 1.45dvh, 12px);
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+    }
+    .map-pill-btn:active,
+    .map-pill-btn.active {
+      background: var(--accent-gradient);
+      color: #ffffff;
+      border-color: transparent;
+      transform: scale(0.97);
+    }
+
+    .map-pill-btn.repaired-btn {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(5, 150, 105, 0.32));
+      border-color: rgba(16, 185, 129, 0.55);
+      color: var(--text-main);
+    }
+    .map-pill-btn.repaired-btn:active,
+    .map-pill-btn.repaired-btn.active {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+    }
+
+    /* ==================== SUSTAINABLE CAR REPAIR MODAL ==================== */
+    .sust-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(3, 7, 18, 0.78);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .sust-modal-backdrop.open {
+      display: flex;
+    }
+    .sust-modal-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg-card);
+      border: 1.5px solid rgba(16, 185, 129, 0.55);
+      border-radius: 22px;
+      padding: 18px 16px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sust-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .sust-title {
+      font-size: 15px;
+      font-weight: 900;
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sust-badges {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .sust-metric {
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #10b981;
+      text-align: center;
+    }
+    .sust-box {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: var(--btn-surface);
+      border: 1px solid var(--border-subtle);
+      font-size: 11.5px;
+      line-height: 1.48;
+      color: var(--text-main);
+    }
+    .sust-box h4 {
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 5px;
+      color: var(--accent-cyan);
+    }
+    .sust-list {
+      margin: 0;
+      padding-left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sust-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .sust-btn-keep {
+      padding: 10px 8px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .sust-btn-remove {
+      padding: 10px 8px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .offline-map-box {
+      width: 100%;
+      height: 300px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1.5px solid var(--border-glass);
+      background: #091326;
+      position: relative;
+      z-index: 2;
+      touch-action: none;
+    }
+
+    /* Modern styling for Leaflet in-map Layer Switcher & Zoom Controls */
+    .leaflet-control-layers,
+    .leaflet-bar {
+      border: 1px solid rgba(99, 102, 241, 0.35) !important;
+      border-radius: 12px !important;
+      background: rgba(15, 23, 42, 0.88) !important;
+      backdrop-filter: blur(10px);
+      color: #ffffff !important;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+      overflow: hidden;
+    }
+    .leaflet-bar a {
+      background: transparent !important;
+      color: #ffffff !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+      font-weight: 800;
+    }
+    .leaflet-control-layers-toggle {
+      width: 34px !important;
+      height: 34px !important;
+    }
+    .leaflet-control-layers-expanded {
+      padding: 8px 12px !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      color: #ffffff !important;
+    }
+
+    @media (min-width: 768px) {
+      .mobile-shell {
+        max-width: 540px;
+      }
+      .camera-card {
+        height: 320px;
+      }
+      .offline-map-box {
+        height: 450px;
+      }
+    }
+
+    .glass-section.map-fullscreen {
+      position: fixed;
+      inset: 8px;
+      z-index: 9999;
+      height: calc(100dvh - 16px);
+      overflow-y: auto;
+    }
+    .glass-section.map-fullscreen .offline-map-box {
+      flex: 1 1 auto;
+      height: 78dvh;
+    }
+
+    .camera-card canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .camera-card.cam-fullscreen canvas {
+      object-fit: contain;
+    }
+
+    .cam-label {
+      color: var(--text-sub);
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    /* ==================== GLASS CARDS ==================== */
+    .glass-section {
+      flex: 0 0 auto;
+      background: var(--bg-card);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border-glass);
+      border-radius: clamp(18px, 2.6dvh, 24px);
+      padding: clamp(8px, 1.4dvh, 14px) clamp(10px, 3vw, 14px);
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(6px, 1dvh, 10px);
+    }
+
+    .section-label {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: clamp(12px, 1.7dvh, 14px);
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .speed-badge {
+      font-size: clamp(10.5px, 1.45dvh, 12px);
+      font-weight: 800;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: var(--bg-track);
+      border: 1px solid var(--border-glass);
+      color: var(--text-main);
+    }
+
+    /* ==================== WHEEL SPEED SLIDER (LOW TO MAX) ==================== */
+    .speed-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 2px 2px;
+    }
+
+    .speed-tag {
+      font-size: clamp(10px, 1.35dvh, 11.5px);
+      font-weight: 800;
+      color: var(--text-sub);
+      letter-spacing: 0.3px;
+      flex: 0 0 auto;
+    }
+
+    .speed-track {
+      position: relative;
+      flex: 1 1 auto;
+      height: clamp(24px, 3.4dvh, 30px);
+      border-radius: 999px;
+      background: var(--bg-track);
+      border: 1.5px solid var(--border-glass);
+      box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.35);
+      cursor: ew-resize;
+      touch-action: none;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    .speed-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 50%;
+      background: var(--accent-gradient);
+      opacity: 0.5;
+      pointer-events: none;
+      transition: width 0.03s linear;
+    }
+
+    .speed-thumb {
+      position: absolute;
+      top: 3px;
+      bottom: 3px;
+      width: clamp(22px, 3.2dvh, 28px);
+      left: calc(50% - 13px);
+      border-radius: 999px;
+      background: var(--accent-gradient);
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), 0 0 12px rgba(0, 240, 255, 0.6);
+      pointer-events: none;
+      transition: left 0.03s linear;
+    }
+
+    /* ==================== FLUID 360° CIRCULAR MOTORS ==================== */
+    .omni-circle-outer {
+      --wheel-size: clamp(128px, min(44vw, 22.5dvh), 196px);
+      position: relative;
+      width: var(--wheel-size);
+      height: var(--wheel-size);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.14) 0%, var(--bg-track) 74%);
+      border: 2px solid var(--border-glass);
+      box-shadow: inset 0 0 28px rgba(0, 240, 255, 0.12), 0 8px 24px rgba(0, 0, 0, 0.28);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    .omni-inner-ring {
+      position: absolute;
+      inset: 16%;
+      border-radius: 50%;
+      border: 1px dashed var(--border-subtle);
+      pointer-events: none;
+    }
+
+    /* Percentage-positioned compass buttons scale smoothly to ANY circle diameter */
+    .compass-btn {
+      position: absolute;
+      width: clamp(24px, 3.6dvh, 32px);
+      height: clamp(24px, 3.6dvh, 32px);
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 1px solid var(--border-subtle);
+      background: var(--btn-surface);
+      color: var(--text-main);
+      font-size: clamp(10px, 1.5dvh, 13px);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 4;
+      touch-action: none;
+    }
+    .compass-btn:active,
+    .compass-btn.active {
+      background: var(--accent-gradient);
+      color: #fff;
+      border-color: transparent;
+      transform: translate(-50%, -50%) scale(1.14);
+    }
+
+    .compass-n  { top: 10%;   left: 50%; }
+    .compass-s  { top: 90%;   left: 50%; }
+    .compass-e  { top: 50%;   left: 90%; }
+    .compass-w  { top: 50%;   left: 10%; }
+    .compass-ne { top: 21.7%; left: 78.3%; }
+    .compass-nw { top: 21.7%; left: 21.7%; }
+    .compass-se { top: 78.3%; left: 78.3%; }
+    .compass-sw { top: 78.3%; left: 21.7%; }
+
+    .omni-puck {
+      position: absolute;
+      width: clamp(46px, 7dvh, 60px);
+      height: clamp(46px, 7dvh, 60px);
+      border-radius: 50%;
+      background: var(--accent-gradient);
+      border: 2.5px solid #ffffff;
+      box-shadow: 0 5px 18px rgba(0, 0, 0, 0.45), 0 0 20px rgba(0, 240, 255, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: clamp(9px, 1.3dvh, 11px);
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      z-index: 6;
+      cursor: grab;
+      touch-action: none;
+      transition: transform 0.04s linear;
+    }
+
+    .rotate-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .rotate-pill {
+      padding: clamp(6px, 1.1dvh, 10px);
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      background: var(--btn-surface);
+      color: var(--text-main);
+      font-size: clamp(11px, 1.5dvh, 12.5px);
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      touch-action: none;
+    }
+    .rotate-pill:active,
+    .rotate-pill.active {
+      background: var(--accent-gradient);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    /* ==================== FLUID 4 VERTICAL SLIDERS DECK ==================== */
+    .v-deck {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(6px, 2vw, 10px);
+    }
+
+    .v-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(4px, 0.8dvh, 7px);
+    }
+
+    .v-title {
+      font-size: clamp(10px, 1.45dvh, 11.5px);
+      font-weight: 800;
+      color: var(--text-main);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .v-track {
+      position: relative;
+      width: clamp(44px, 14vw, 56px);
+      height: clamp(92px, 17.5dvh, 160px);
+      border-radius: 999px;
+      background: var(--bg-track);
+      border: 1.5px solid var(--border-glass);
+      box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.38);
+      cursor: ns-resize;
+      touch-action: none;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+    }
+
+    .v-zero-line {
+      position: absolute;
+      top: 50%;
+      left: 8px;
+      right: 8px;
+      height: 2px;
+      background: var(--border-subtle);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .v-fill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 0%;
+      background: var(--accent-gradient);
+      opacity: 0.45;
+      z-index: 1;
+      pointer-events: none;
+      transition: height 0.03s linear, top 0.03s linear;
+    }
+
+    .v-fill.servo-fill {
+      background: var(--servo-gradient);
+      top: auto;
+      bottom: 0;
+      height: 50%;
+    }
+
+    .v-thumb {
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      height: clamp(22px, 3.2dvh, 28px);
+      top: calc(50% - 13px);
+      border-radius: 999px;
+      background: var(--accent-gradient);
+      border: 2px solid #ffffff;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45), 0 0 12px rgba(0, 240, 255, 0.55);
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      transition: top 0.03s linear;
+    }
+
+    .v-thumb.servo-thumb {
+      background: var(--servo-gradient);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45), 0 0 12px rgba(236, 72, 153, 0.55);
+    }
+
+    .v-thumb::after {
+      content: "";
+      width: 14px;
+      height: 2.5px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    /* ==================== MOBILE LANDSCAPE AUTO-ADAPT ==================== */
+    @media (orientation: landscape) and (max-height: 560px) {
+      .mobile-shell {
+        max-width: 100%;
+        height: 100dvh;
+        border-radius: 0;
+      }
+      .main-stack {
+        flex-direction: row;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .camera-card {
+        flex: 1 1 32%;
+        max-height: none;
+        height: 100%;
+      }
+      .glass-section {
+        flex: 1 1 34%;
+        justify-content: center;
+      }
+      .omni-circle-outer {
+        --wheel-size: clamp(120px, 46dvh, 175px);
+      }
+      .v-track {
+        width: clamp(38px, 6.5vw, 50px);
+        height: clamp(110px, 52dvh, 180px);
+      }
+    }
+
+    /* ==================== FLOATING HARDWARE LINK NOTICE (ZERO LAYOUT IMPACT) ==================== */
+    .hw-conn-toast {
+      position: fixed;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9998;
+      max-width: min(92vw, 440px);
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(127, 29, 29, 0.92);
+      border: 1px solid rgba(248, 113, 113, 0.75);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+      pointer-events: none;
+      display: none;
+    }
+    .hw-conn-toast.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hw-conn-toast" id="hwConnToast"></div>
+
+  <div class="mobile-shell">
+
+    <!-- ==================== MINIMAL HEADER ==================== -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-icon">LM</div>
+        <span class="brand-title">LiftMate</span>
+      </div>
+      <div class="top-actions">
+        <button class="theme-btn" onclick="toggleTheme()" title="Light / Dark Mode">
+          <span id="themeIcon">☀️</span>
+        </button>
+        <button class="reset-btn" id="resetBtn" onclick="resetEverything()">Reset</button>
+        <button class="stop-btn" id="stopBtn" onclick="stopEverything()">STOP</button>
+      </div>
+    </header>
+
+    <div class="main-stack">
+
+      <!-- ==================== LIVE CAMERA VIEW ==================== -->
+      <div class="camera-card" id="cameraCard">
+        <canvas id="simpleCamCanvas" width="320" height="240"></canvas>
+        <span id="simpleCamMsg" class="cam-label">Camera</span>
+
+        <!-- AI Status Overlay (Inside Existing Camera Card) -->
+        <div class="ai-cam-hud" id="aiCamHud">
+          <div class="ai-hud-row">
+            <span>AI:<b class="ai-val" id="aiHudState">ON</b></span>
+            <span>CARS:<b class="ai-val" id="aiHudCars">0</b></span>
+            <span>OBS:<b class="ai-val" id="aiHudObstacles">0</b></span>
+            <span>FPS:<b class="ai-val" id="aiHudFps">0.0</b></span>
+          </div>
+          <div class="ai-hud-row">
+            <span>VISION:<b class="ai-val" id="aiHudVisionStatus">CLEAR</b></span>
+          </div>
+        </div>
+
+        <!-- Smart Warning Banner & Audio Alert Mute Button -->
+        <div class="ai-top-right">
+          <div class="ai-warning-banner" id="aiWarningBanner"></div>
+          <button class="ai-mute-btn" id="btnAiMute" onclick="toggleAiSoundMute()" title="Mute / Unmute AI Warning Audio">
+            🔊
+          </button>
+        </div>
+
+        <!-- Left / Center / Right Obstacle Awareness Strip -->
+        <div class="ai-region-strip" id="aiRegionStrip">
+          <div class="ai-zone-pill" id="aiZoneLeft">L: CLEAR</div>
+          <div class="ai-zone-pill" id="aiZoneCenter">C: CLEAR</div>
+          <div class="ai-zone-pill" id="aiZoneRight">R: CLEAR</div>
+        </div>
+
+        <!-- AI Mode Controls + Full View Button (Inside Existing Camera Card) -->
+        <div class="ai-cam-controls" id="aiCamControls">
+          <div class="ai-mode-group">
+            <button class="ai-ctrl-btn active" id="btnAiOnOff" onclick="toggleAiVisionEnabled()">
+              AI ON
+            </button>
+            <button class="ai-ctrl-btn active" id="btnAiDetectMode" onclick="setAiVisionMode('DETECTION')">
+              DETECT
+            </button>
+            <button class="ai-ctrl-btn" id="btnAiSafetyMode" onclick="setAiVisionMode('SAFETY_ASSIST')">
+              SAFETY
+            </button>
+            <button class="ai-ctrl-btn" id="btnAiNavMode" onclick="toggleAutonomousMode()" title="Activate Autonomous Obstacle-Avoidance vs Manual">
+              AUTO OFF
+            </button>
+          </div>
+          <button class="cam-full-btn" id="btnFullCamera" onclick="toggleCameraFullscreen()">
+            ⛶ Full View
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== OFFLINE LIVE NAVIGATION MAP ==================== -->
+      <section class="glass-section" id="offlineMapCard">
+        <div class="section-label">
+          <span>Live Robot Map</span>
+        </div>
+
+        <!-- Professional Multi-Layer Map Viewport (Satellite / Street / Dark / Local Grid) -->
+        <div id="liftmateOfflineMap" class="offline-map-box"></div>
+
+        <!-- Streamlined Map Controls -->
+        <div class="map-actions-row">
+          <button class="map-pill-btn" id="btnFullScreenMap" onclick="window.liftmateMap && window.liftmateMap.toggleFullscreen()">
+            Full Screen Map
+          </button>
+          <button class="map-pill-btn" id="btnResetGyro" onclick="window.liftmateMap && window.liftmateMap.resetGyro()">
+            Reset Gyro
+          </button>
+          <button class="map-pill-btn" id="btnLocateMe" onclick="window.liftmateMap && window.liftmateMap.locateMe()">
+            Locate Me
+          </button>
+        </div>
+
+        <!-- Car Repair & Manual Robot Placement Controls -->
+        <div class="map-actions-row">
+          <button class="map-pill-btn" id="btnMoveRobot" onclick="window.liftmateMap && window.liftmateMap.toggleMoveRobotMode()">
+            🤖 Move Robot
+          </button>
+          <button class="map-pill-btn" id="btnPinCarHere" onclick="window.liftmateMap && window.liftmateMap.pinCarRepairHere()">
+            🔧 Pin Car Here
+          </button>
+          <button class="map-pill-btn" id="btnTapPinCar" onclick="window.liftmateMap && window.liftmateMap.toggleTapPinMode()">
+            📍 Tap Map to Pin
+          </button>
+        </div>
+
+        <div class="map-actions-row" style="grid-template-columns: 1.3fr 1fr;">
+          <button class="map-pill-btn repaired-btn" id="btnCarRepaired" onclick="window.liftmateMap && window.liftmateMap.markLatestCarRepaired()">
+            ✅ Car Repaired (Sustainability)
+          </button>
+          <button class="map-pill-btn" id="btnClearRepairPins" onclick="window.liftmateMap && window.liftmateMap.clearRepairPins()">
+            🗑️ Remove All
+          </button>
+        </div>
+      </section>
+
+      <!-- ==================== CIRCULAR OMNIDIRECTIONAL WHEELS ==================== -->
+      <section class="glass-section">
+        <div class="section-label">
+          <span>Wheels</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button class="auto-mode-btn" id="btnAutoMode" onclick="toggleAutonomousMode()" title="Switch between Autonomous Obstacle Avoidance and Manual control">🤖 MANUAL</button>
+            <span class="speed-badge" id="wheelSpeedBadge">Speed 55%</span>
+          </div>
+        </div>
+
+        <div class="omni-circle-outer" id="omniCircle">
+          <div class="omni-inner-ring"></div>
+
+          <button class="compass-btn compass-n"  data-vx="0"     data-vy="1"     data-w="0">↑</button>
+          <button class="compass-btn compass-ne" data-vx="0.75"  data-vy="0.75"  data-w="0">↗</button>
+          <button class="compass-btn compass-e"  data-vx="1"     data-vy="0"     data-w="0">→</button>
+          <button class="compass-btn compass-se" data-vx="0.75"  data-vy="-0.75" data-w="0">↘</button>
+          <button class="compass-btn compass-s"  data-vx="0"     data-vy="-1"    data-w="0">↓</button>
+          <button class="compass-btn compass-sw" data-vx="-0.75" data-vy="-0.75" data-w="0">↙</button>
+          <button class="compass-btn compass-w"  data-vx="-1"    data-vy="0"     data-w="0">←</button>
+          <button class="compass-btn compass-nw" data-vx="-0.75" data-vy="0.75"  data-w="0">↖</button>
+
+          <div class="omni-puck" id="omniPuck">MOVE</div>
+        </div>
+
+        <div class="rotate-row">
+          <button class="rotate-pill" data-vx="0" data-vy="0" data-w="-1">↺ Rotate Left</button>
+          <button class="rotate-pill" data-vx="0" data-vy="0" data-w="1">↻ Rotate Right</button>
+        </div>
+
+        <!-- Wheel Motors Speed Slider (Low to Max) -->
+        <div class="speed-row">
+          <span class="speed-tag">Low</span>
+          <div class="speed-track" id="wheelSpeedTrack">
+            <div class="speed-fill" id="wheelSpeedFill"></div>
+            <div class="speed-thumb" id="wheelSpeedThumb"></div>
+          </div>
+          <span class="speed-tag">Max</span>
+        </div>
+      </section>
+
+      <!-- ==================== VERTICAL SLIDERS: ACTUATORS & SERVO ==================== -->
+      <section class="glass-section">
+        <div class="section-label">
+          <span>Actuators &amp; Servo</span>
+        </div>
+
+        <div class="v-deck">
+
+          <!-- 1. Jack (Upper Actuator) Vertical Slider -->
+          <div class="v-col">
+            <span class="v-title">Jack</span>
+            <div class="v-track" data-target="UPPER">
+              <div class="v-zero-line"></div>
+              <div class="v-fill" id="vFillUpper"></div>
+              <div class="v-thumb" id="vThumbUpper"></div>
+            </div>
+          </div>
+
+          <!-- 2. Holder (Lower Actuator) Vertical Slider -->
+          <div class="v-col">
+            <span class="v-title">Holder</span>
+            <div class="v-track" data-target="LOWER">
+              <div class="v-zero-line"></div>
+              <div class="v-fill" id="vFillLower"></div>
+              <div class="v-thumb" id="vThumbLower"></div>
+            </div>
+          </div>
+
+          <!-- 3. Jack & Holder (Both Actuators) Vertical Slider -->
+          <div class="v-col">
+            <span class="v-title">Jack &amp; Holder</span>
+            <div class="v-track" data-target="BOTH">
+              <div class="v-zero-line"></div>
+              <div class="v-fill" id="vFillBoth"></div>
+              <div class="v-thumb" id="vThumbBoth"></div>
+            </div>
+          </div>
+
+          <!-- 4. Camera (Servo Vertical Slider, 6° to 130°) -->
+          <div class="v-col">
+            <span class="v-title" id="servoTitle">Camera</span>
+            <div class="v-track" id="vTrackServo">
+              <div class="v-zero-line"></div>
+              <div class="v-fill servo-fill" id="vFillServo"></div>
+              <div class="v-thumb servo-thumb" id="vThumbServo"></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+  </div>
+
+  <!-- ==================== SUSTAINABLE CAR REPAIR & PURPOSE MODAL ==================== -->
+  <div class="sust-modal-backdrop" id="sustainableRepairModal" onclick="if(event.target===this) window.liftmateMap && window.liftmateMap.closeSustainableRepairModal()">
+    <div class="sust-modal-card">
+      <div class="sust-header">
+        <div class="sust-title">
+          <span>🌱</span>
+          <span id="sustModalPinLabel">Car Repair Completed</span>
+        </div>
+        <button class="theme-btn" onclick="window.liftmateMap && window.liftmateMap.closeSustainableRepairModal()" title="Close">✕</button>
+      </div>
+
+      <div class="sust-badges">
+        <div class="sust-metric" id="sustModalCount">1 Car Repaired</div>
+        <div class="sust-metric" id="sustModalCo2">4.2 kg CO₂ Saved</div>
+      </div>
+
+      <div class="sust-box">
+        <h4>🎯 Purpose of LiftMate Car Repair</h4>
+        <div>
+          LiftMate autonomously and remotely navigates under vehicles using 360° Mecanum wheels, live camera vision, and dual electric actuators (<b>Jack &amp; Holder</b>) to lift and stabilize cars safely—eliminating the need for human mechanics to enter hazardous under-load crush zones.
+        </div>
+      </div>
+
+      <div class="sust-box">
+        <h4>♻️ Sustainability &amp; Environmental Impact</h4>
+        <ul class="sust-list">
+          <li><b>100% Zero-Emission Electric Drive:</b> Battery-electric Mecanum motors &amp; actuators produce <b>0 g exhaust emissions</b> vs. heavy diesel recovery trucks.</li>
+          <li><b>Zero Hydraulic Oil Contamination:</b> Electric linear actuators (Jack &amp; Holder) eliminate hydraulic fluid leaks into roads, soil, and groundwater.</li>
+          <li><b>Lower Carbon Footprint:</b> On-site robotic assistance avoids tow-truck dispatch (~4.2 kg CO₂ saved per vehicle repair) and extends tire &amp; chassis life.</li>
+          <li><b>Sustainable Worker Safety:</b> Zero back strain and zero under-vehicle crush exposure via remote smartphone telemetry.</li>
+        </ul>
+      </div>
+
+      <div class="sust-actions">
+        <button class="sust-btn-keep" onclick="window.liftmateMap && window.liftmateMap.closeSustainableRepairModal()">
+          ✅ Repaired (Keep on Map)
+        </button>
+        <button class="sust-btn-remove" id="sustModalRemoveBtn">
+          🗑️ Remove Pin
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/leaflet/leaflet.js"></script>
+  <script src="/js/liftmate_offline_map.js?v=8"></script>
+  <script>
+    "use strict";
+
+    let wheelVec = { vx: 0, vy: 0, w: 0, active: false };
+    let actVec = { upper: 0, lower: 0 };
+    let servoDebounce = null;
+    const MIN_WHEEL_PWM = 55;
+    const MAX_WHEEL_PWM = 255;
+    const DEFAULT_WHEEL_PWM = 155;
+    let wheelSpeedPwm = DEFAULT_WHEEL_PWM;
+
+    function toggleCameraFullscreen() {
+      const card = document.getElementById("cameraCard");
+      const btn = document.getElementById("btnFullCamera");
+      if (!card) return;
+      const isFull = card.classList.toggle("cam-fullscreen");
+      if (btn) {
+        btn.textContent = isFull ? "✕ Exit Full View" : "⛶ Full View";
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        const card = document.getElementById("cameraCard");
+        const btn = document.getElementById("btnFullCamera");
+        if (card && card.classList.contains("cam-fullscreen")) {
+          card.classList.remove("cam-fullscreen");
+          if (btn) btn.textContent = "⛶ Full View";
+        }
+      }
+    });
+
+    function renderWheelSpeedSlider(pwm) {
+      wheelSpeedPwm = Math.max(MIN_WHEEL_PWM, Math.min(MAX_WHEEL_PWM, Math.round(pwm)));
+      const norm = (wheelSpeedPwm - MIN_WHEEL_PWM) / (MAX_WHEEL_PWM - MIN_WHEEL_PWM);
+      const pct = Math.round(20 + norm * 80);
+      const fill = document.getElementById("wheelSpeedFill");
+      const thumb = document.getElementById("wheelSpeedThumb");
+      const badge = document.getElementById("wheelSpeedBadge");
+      const pctTrack = 6 + norm * 88;
+      if (fill) fill.style.width = `${Math.round(norm * 100)}%`;
+      if (thumb) thumb.style.left = `calc(${pctTrack}% - ${(thumb.clientWidth || 24) / 2}px)`;
+      if (badge) {
+        const tag = norm <= 0.08 ? "Low" : (norm >= 0.95 ? "Max" : `${pct}%`);
+        badge.textContent = `Speed ${tag}`;
+      }
+      if (wheelVec.active) {
+        sendWheelsNow();
+      }
+    }
+
+    /* ==================== THEME TOGGLE ==================== */
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem("liftmate_theme", theme);
+      document.getElementById("themeIcon").textContent = theme === "light" ? "🌙" : "☀️";
+    }
+
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute("data-theme") || "dark";
+      applyTheme(cur === "dark" ? "light" : "dark");
+    }
+
+    /* ==================== API CALL (RATE-SAFE + STOP-PRIORITY) ==================== */
+    let lastHwMsgTs = 0;
+    let hwToastTimer = null;
+    let serialConnectedFlag = true;
+    let controlInFlight = false;
+    let queuedControlPayload = null;
+    let lastMoveSendTs = 0;
+
+    function updateHwToast(msg, stickyDisconnected = false) {
+      const el = document.getElementById("hwConnToast");
+      if (!el) return;
+      if (!msg) {
+        if (!serialConnectedFlag) {
+          el.textContent = "⚠ Arduino Mega USB disconnected — plug Mega USB cable into Raspberry Pi";
+          el.classList.add("show");
+          return;
+        }
+        el.classList.remove("show");
+        el.textContent = "";
+        return;
+      }
+      el.textContent = msg;
+      el.classList.add("show");
+      lastHwMsgTs = Date.now();
+      if (hwToastTimer) clearTimeout(hwToastTimer);
+      if (!stickyDisconnected) {
+        hwToastTimer = setTimeout(() => {
+          if (Date.now() - lastHwMsgTs >= 2400) {
+            updateHwToast(null);
+          }
+        }, 2500);
+      }
+    }
+
+    function isPriorityStopOrReset(payload) {
+      if (!payload || !payload.mode) return false;
+      const m = String(payload.mode).toUpperCase();
+      if (m === "STOP_ALL" || m === "RESET_ALL") return true;
+      if (m === "WHEELS" && (payload.vy || 0) === 0 && (payload.vx || 0) === 0 && (payload.omega || 0) === 0) return true;
+      if (m === "ACTUATORS" && (payload.upper_pwm || 0) === 0 && (payload.lower_pwm || 0) === 0) return true;
+      return m === "SERVO";
+    }
+
+    function dispatchControlNow(payload) {
+      controlInFlight = true;
+      lastMoveSendTs = Date.now();
+      fetch("/api/simple/control", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+        .then((res) => res.json().catch(() => null))
+        .then((data) => {
+          if (!data) return;
+          if (typeof data.serial_connected === "boolean") {
+            serialConnectedFlag = data.serial_connected;
+          }
+          if (data.ok === false && data.message) {
+            const sticky = String(data.message).includes("DISCONNECTED");
+            updateHwToast(`⚠ ${data.message}`, sticky);
+          } else if (data.ok === true && serialConnectedFlag) {
+            updateHwToast(null);
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          controlInFlight = false;
+          if (queuedControlPayload) {
+            const next = queuedControlPayload;
+            queuedControlPayload = null;
+            dispatchControlNow(next);
+          }
+        });
+    }
+
+    function sendControl(payload) {
+      if (autonomousEnabled && payload && payload.mode !== "SERVO") {
+        updateAutonomousUi({ enabled: false, action: "MANUAL", reason: "Manual operator control" });
+      }
+      const priority = isPriorityStopOrReset(payload);
+      const now = Date.now();
+      if (priority) {
+        // Priority stop/reset/servo must always supersede any queued drag packet
+        if (controlInFlight) {
+          queuedControlPayload = payload;
+          return;
+        }
+        queuedControlPayload = null;
+        dispatchControlNow(payload);
+        return;
+      }
+      if (controlInFlight || (now - lastMoveSendTs < 55)) {
+        queuedControlPayload = payload;
+        return;
+      }
+      dispatchControlNow(payload);
+    }
+
+    /* ==================== 360° CIRCULAR WHEELS ==================== */
+    function setPuckPosition(nx, ny) {
+      const circle = document.getElementById("omniCircle");
+      const puck = document.getElementById("omniPuck");
+      const maxR = Math.max(36, circle.clientWidth * 0.31);
+      const px = Math.round(nx * maxR);
+      const py = Math.round(-ny * maxR);
+      puck.style.transform = `translate(${px}px, ${py}px)`;
+    }
+
+    function sendWheelsNow() {
+      clearStopBadge();
+      const vy = Math.round(wheelVec.vy * wheelSpeedPwm);
+      const vx = Math.round(wheelVec.vx * wheelSpeedPwm);
+      const omega = Math.round(wheelVec.w * wheelSpeedPwm);
+      sendControl({ mode: "WHEELS", vy, vx, omega });
+    }
+
+    function stopWheels() {
+      wheelVec = { vx: 0, vy: 0, w: 0, active: false };
+      setPuckPosition(0, 0);
+      document.querySelectorAll(".compass-btn.active, .rotate-pill.active").forEach((b) => b.classList.remove("active"));
+      sendControl({ mode: "WHEELS", vy: 0, vx: 0, omega: 0 });
+    }
+
+    /* ==================== VERTICAL ACTUATORS ==================== */
+    function renderBiDirectionalFader(suffix, pwmVal) {
+      const thumb = document.getElementById(`vThumb${suffix}`);
+      const fill = document.getElementById(`vFill${suffix}`);
+      const v = Math.max(-255, Math.min(255, pwmVal));
+      const norm = v / 255.0;
+      const pctFromTop = 50 - norm * 40;
+      thumb.style.top = `calc(${pctFromTop}% - ${thumb.clientHeight / 2 || 13}px)`;
+
+      if (v > 0) {
+        const h = norm * 40;
+        fill.style.top = `${50 - h}%`;
+        fill.style.height = `${h}%`;
+      } else if (v < 0) {
+        const h = Math.abs(norm) * 40;
+        fill.style.top = `50%`;
+        fill.style.height = `${h}%`;
+      } else {
+        fill.style.top = `50%`;
+        fill.style.height = `0%`;
+      }
+    }
+
+    function clearStopBadge() {
+      const stopBtn = document.getElementById("stopBtn");
+      if (stopBtn && stopBtn.classList.contains("active")) {
+        stopBtn.classList.remove("active");
+        stopBtn.textContent = "STOP";
+      }
+    }
+
+    /* ==================== JACK MOVING UP / DOWN ATTENTION SOUND ALERT ==================== */
+    let lastJackBeepTs = 0;
+
+    function ensureJackAudioContext() {
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        if (!audioCtx) audioCtx = new Ctx();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        return audioCtx;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function playJackAlertTone(pwmVal) {
+      if (!pwmVal || pwmVal === 0) return;
+      const now = Date.now();
+      if (now - lastJackBeepTs < 300) return;
+      lastJackBeepTs = now;
+
+      const ctx = ensureJackAudioContext();
+      if (!ctx) return;
+      try {
+        const t0 = ctx.currentTime;
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        // Square + Sawtooth dual-oscillator industrial piezo alarm for maximum speaker loudness
+        osc1.type = "square";
+        osc2.type = "sawtooth";
+
+        if (pwmVal > 0) {
+          // Jack Moving UP: loud high-output ascending industrial alarm (2200 Hz -> 3000 Hz)
+          osc1.frequency.setValueAtTime(2200, t0);
+          osc1.frequency.setValueAtTime(3000, t0 + 0.11);
+          osc2.frequency.setValueAtTime(1100, t0);
+          osc2.frequency.setValueAtTime(1500, t0 + 0.11);
+        } else {
+          // Jack Moving DOWN: loud high-output descending industrial backup alarm (2800 Hz -> 1900 Hz)
+          osc1.frequency.setValueAtTime(2800, t0);
+          osc1.frequency.setValueAtTime(1900, t0 + 0.11);
+          osc2.frequency.setValueAtTime(1400, t0);
+          osc2.frequency.setValueAtTime(950, t0 + 0.11);
+        }
+
+        // Sustained full-volume (1.0) plateau before rapid release
+        gain.gain.setValueAtTime(1.0, t0);
+        gain.gain.setValueAtTime(1.0, t0 + 0.21);
+        gain.gain.exponentialRampToValueAtTime(0.01, t0 + 0.25);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(t0);
+        osc2.start(t0);
+        osc1.stop(t0 + 0.25);
+        osc2.stop(t0 + 0.25);
+      } catch (_) {}
+    }
+
+    function setActuatorTarget(target, pwm) {
+      clearStopBadge();
+      if (target === "BOTH") {
+        actVec.upper = pwm;
+        actVec.lower = pwm;
+        renderBiDirectionalFader("Both", pwm);
+        renderBiDirectionalFader("Upper", pwm);
+        renderBiDirectionalFader("Lower", pwm);
+      } else if (target === "UPPER") {
+        actVec.upper = pwm;
+        actVec.lower = 0;
+        renderBiDirectionalFader("Upper", pwm);
+        renderBiDirectionalFader("Lower", 0);
+        renderBiDirectionalFader("Both", 0);
+      } else if (target === "LOWER") {
+        actVec.upper = 0;
+        actVec.lower = pwm;
+        renderBiDirectionalFader("Lower", pwm);
+        renderBiDirectionalFader("Upper", 0);
+        renderBiDirectionalFader("Both", 0);
+      }
+      if (pwm !== 0) {
+        playJackAlertTone(pwm);
+      } else {
+        lastJackBeepTs = 0;
+      }
+      sendControl({ mode: "ACTUATORS", upper_pwm: actVec.upper, lower_pwm: actVec.lower });
+    }
+
+    /* ==================== VERTICAL SERVO SLIDER (6° TO 130°) ==================== */
+    const SERVO_MIN_DEG = 6;
+    const SERVO_MAX_DEG = 130;
+
+    function renderServoFader(angle) {
+      const thumb = document.getElementById("vThumbServo");
+      const title = document.getElementById("servoTitle");
+      const a = Math.max(SERVO_MIN_DEG, Math.min(SERVO_MAX_DEG, Math.round(angle)));
+      const norm = (a - SERVO_MIN_DEG) / (SERVO_MAX_DEG - SERVO_MIN_DEG);
+      const pctFromTop = 90 - norm * 80;
+      thumb.style.top = `calc(${pctFromTop}% - ${thumb.clientHeight / 2 || 13}px)`;
+      document.getElementById("vFillServo").style.height = `${Math.round(norm * 100)}%`;
+      if (title) title.textContent = "Camera";
+    }
+
+    function setServoAngle(angle) {
+      clearStopBadge();
+      const clamped = Math.max(SERVO_MIN_DEG, Math.min(SERVO_MAX_DEG, Math.round(angle)));
+      renderServoFader(clamped);
+      if (servoDebounce) clearTimeout(servoDebounce);
+      servoDebounce = setTimeout(() => {
+        sendControl({ mode: "SERVO", servo_angle: clamped });
+      }, 30);
+    }
+
+    /* ==================== STOP ALL & RESET ALL ==================== */
+    let cancelActiveGestures = () => {};
+
+    function stopEverything() {
+      cancelActiveGestures();
+      if (servoDebounce) {
+        clearTimeout(servoDebounce);
+        servoDebounce = null;
+      }
+      wheelVec = { vx: 0, vy: 0, w: 0, active: false };
+      actVec = { upper: 0, lower: 0 };
+      setPuckPosition(0, 0);
+      document.querySelectorAll(".compass-btn.active, .rotate-pill.active").forEach((b) => b.classList.remove("active"));
+      renderBiDirectionalFader("Upper", 0);
+      renderBiDirectionalFader("Lower", 0);
+      renderBiDirectionalFader("Both", 0);
+
+      const stopBtn = document.getElementById("stopBtn");
+      if (stopBtn) {
+        stopBtn.classList.add("active");
+        stopBtn.textContent = "STOPPED";
+      }
+
+      sendControl({ mode: "STOP_ALL" });
+      setTimeout(() => sendControl({ mode: "STOP_ALL" }), 60);
+    }
+
+    function resetEverything() {
+      cancelActiveGestures();
+      clearStopBadge();
+      if (servoDebounce) {
+        clearTimeout(servoDebounce);
+        servoDebounce = null;
+      }
+      wheelVec = { vx: 0, vy: 0, w: 0, active: false };
+      actVec = { upper: 0, lower: 0 };
+      setPuckPosition(0, 0);
+      document.querySelectorAll(".compass-btn.active, .rotate-pill.active").forEach((b) => b.classList.remove("active"));
+      renderBiDirectionalFader("Upper", 0);
+      renderBiDirectionalFader("Lower", 0);
+      renderBiDirectionalFader("Both", 0);
+      renderServoFader(SERVO_MIN_DEG);
+      renderWheelSpeedSlider(DEFAULT_WHEEL_PWM);
+
+      const resetBtn = document.getElementById("resetBtn");
+      if (resetBtn) {
+        resetBtn.classList.add("active");
+        setTimeout(() => resetBtn.classList.remove("active"), 350);
+      }
+
+      sendControl({ mode: "RESET_ALL", servo_angle: SERVO_MIN_DEG });
+    }
+
+    /* ==================== KEEP-ALIVE HEARTBEAT ==================== */
+    setInterval(() => {
+      if (wheelVec.active) {
+        sendWheelsNow();
+      } else if (actVec.upper !== 0 || actVec.lower !== 0) {
+        playJackAlertTone(actVec.upper !== 0 ? actVec.upper : actVec.lower);
+        sendControl({ mode: "ACTUATORS", upper_pwm: actVec.upper, lower_pwm: actVec.lower });
+      }
+    }, 150);
+
+    /* ==================== AI VISION OVERLAY, WARNINGS & CONTROLS ==================== */
+    let aiVisionState = {
+      enabled: true,
+      mode: "DETECTION",
+      ai_navigation_locked: true,
+      model_ready: true,
+      vision_status: "READY",
+      active_warning: "",
+      warning_level: "NONE",
+      car_count: 0,
+      vehicle_count: 0,
+      obstacle_count: 0,
+      car_in_forward_region: false,
+      ai_fps: 0.0,
+      detections: [],
+      regions: {
+        LEFT: { status: "CLEAR CAMERA REGION", blocked: false },
+        CENTER: { status: "CLEAR CAMERA REGION", blocked: false },
+        RIGHT: { status: "CLEAR CAMERA REGION", blocked: false },
+      },
+    };
+    let aiSoundMuted = localStorage.getItem("liftmate_ai_mute") === "1";
+    let lastAiBeepTs = 0;
+    let audioCtx = null;
+
+    function updateMuteButtonIcon() {
+      const btn = document.getElementById("btnAiMute");
+      if (btn) btn.textContent = aiSoundMuted ? "🔇" : "🔊";
+    }
+
+    function toggleAiSoundMute() {
+      aiSoundMuted = !aiSoundMuted;
+      localStorage.setItem("liftmate_ai_mute", aiSoundMuted ? "1" : "0");
+      updateMuteButtonIcon();
+    }
+
+    function playAiWarningBeep(level) {
+      if (aiSoundMuted) return;
+      const now = Date.now();
+      const cooldown = level === "CRITICAL" ? 1400 : 2800;
+      if (now - lastAiBeepTs < cooldown) return;
+      lastAiBeepTs = now;
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        if (!audioCtx) audioCtx = new Ctx();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = level === "CRITICAL" ? "sawtooth" : "sine";
+        osc.frequency.value = level === "CRITICAL" ? 880 : 620;
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.18);
+      } catch (_) {}
+    }
+
+    async function toggleAiVisionEnabled() {
+      const nextEnabled = !aiVisionState.enabled;
+      try {
+        const res = await fetch("/api/ai/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ enabled: nextEnabled }),
+        });
+        const data = await res.json();
+        if (data && data.ai_vision) updateAiHudAndControls(data.ai_vision);
+      } catch (_) {}
+    }
+
+    async function setAiVisionMode(mode) {
+      try {
+        const res = await fetch("/api/ai/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ enabled: true, mode }),
+        });
+        const data = await res.json();
+        if (data && data.ai_vision) {
+          updateAiHudAndControls(data.ai_vision);
+        }
+        if (data && data.ok === false && data.message) {
+          const banner = document.getElementById("aiWarningBanner");
+          if (banner) {
+            banner.textContent = "AI NAV LOCKED – SENSORS REQUIRED";
+            banner.className = "ai-warning-banner show level-WARNING";
+          }
+        }
+      } catch (_) {}
+    }
+
+    let autonomousEnabled = false;
+
+    function updateAutonomousUi(autoState) {
+      if (!autoState) return;
+      autonomousEnabled = !!autoState.enabled;
+      const action = autoState.action || (autonomousEnabled ? "ENGAGED" : "MANUAL");
+
+      const wheelBtn = document.getElementById("btnAutoMode");
+      if (wheelBtn) {
+        wheelBtn.textContent = autonomousEnabled ? `🤖 AUTO: ${action}` : "🤖 MANUAL";
+        wheelBtn.classList.toggle("active", autonomousEnabled);
+        wheelBtn.title = autoState.reason || "Toggle Autonomous Obstacle Avoidance vs Manual";
+      }
+
+      const camBtn = document.getElementById("btnAiNavMode");
+      if (camBtn) {
+        camBtn.textContent = autonomousEnabled ? "AUTO ON" : "AUTO OFF";
+        camBtn.classList.toggle("auto-active", autonomousEnabled);
+        camBtn.classList.remove("locked");
+      }
+    }
+
+    async function toggleAutonomousMode() {
+      const targetEnabled = !autonomousEnabled;
+      const autoSpeed = Math.min(125, Math.max(55, Math.round(wheelSpeedPwm * 0.58)));
+      try {
+        const res = await fetch("/api/autonomous/mode", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ enabled: targetEnabled, speed_pwm: autoSpeed }),
+        });
+        const data = await res.json();
+        if (data && data.ai_vision) {
+          updateAiHudAndControls(data.ai_vision);
+        }
+        if (data && data.autonomous) {
+          updateAutonomousUi(data.autonomous);
+        }
+        if (data && data.ok === false && data.message) {
+          const banner = document.getElementById("aiWarningBanner");
+          if (banner) {
+            banner.textContent = data.message;
+            banner.className = "ai-warning-banner show level-WARNING";
+          }
+        }
+      } catch (_) {}
+    }
+
+    function updateAiHudAndControls(ai) {
+      if (!ai) return;
+      aiVisionState = ai;
+
+      const stateEl = document.getElementById("aiHudState");
+      const fpsEl = document.getElementById("aiHudFps");
+      const carsEl = document.getElementById("aiHudCars");
+      const vehEl = document.getElementById("aiHudVehicles");
+      const obsEl = document.getElementById("aiHudObstacles");
+      const visEl = document.getElementById("aiHudVisionStatus");
+
+      if (stateEl) {
+        stateEl.textContent = ai.enabled ? (ai.mode === "SAFETY_ASSIST" ? "SAFETY" : "ON") : "OFF";
+        stateEl.className = "ai-val " + (ai.enabled ? "" : "off");
+      }
+      if (fpsEl) fpsEl.textContent = ai.enabled ? Number(ai.ai_fps || 0).toFixed(1) : "0.0";
+      if (carsEl) {
+        carsEl.textContent = ai.car_in_forward_region ? `${ai.car_count || 0}▲` : `${ai.car_count || 0}`;
+      }
+      if (vehEl) vehEl.textContent = `${ai.vehicle_count || 0}`;
+      if (obsEl) {
+        obsEl.textContent = `${ai.obstacle_count || 0}`;
+        obsEl.className = "ai-val " + ((ai.obstacle_count || 0) > 0 ? "warn" : "");
+      }
+      if (visEl) {
+        const rawVis = ai.vision_status || "READY";
+        visEl.textContent = rawVis === "CLEAR CAMERA REGION" ? "CLEAR" : rawVis;
+        visEl.className =
+          "ai-val " +
+          (ai.warning_level === "CRITICAL" ? "crit" : ai.warning_level === "WARNING" ? "warn" : "");
+      }
+
+      // Update LEFT / CENTER / RIGHT region pills
+      const regs = ai.regions || {};
+      const mapZone = (elId, shortTitle, zObj) => {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if (!ai.enabled) {
+          el.textContent = `${shortTitle}: OFF`;
+          el.className = "ai-zone-pill unknown";
+          return;
+        }
+        const st = (zObj && zObj.status) || "CLEAR CAMERA REGION";
+        const blocked = Boolean(zObj && zObj.blocked);
+        if (st.includes("UNKNOWN")) {
+          el.textContent = `${shortTitle}: UNK`;
+          el.className = "ai-zone-pill unknown";
+        } else if (blocked) {
+          el.textContent = shortTitle === "C" ? "C: AHEAD" : `${shortTitle}: OBSTACLE`;
+          el.className = "ai-zone-pill blocked";
+        } else {
+          el.textContent = `${shortTitle}: CLEAR`;
+          el.className = "ai-zone-pill";
+        }
+      };
+      mapZone("aiZoneLeft", "L", regs.LEFT);
+      mapZone("aiZoneCenter", "C", regs.CENTER);
+      mapZone("aiZoneRight", "R", regs.RIGHT);
+
+      // Update Smart Warning Banner
+      const banner = document.getElementById("aiWarningBanner");
+      if (banner) {
+        if (ai.enabled && ai.active_warning) {
+          banner.textContent = ai.active_warning;
+          banner.className = `ai-warning-banner show level-${ai.warning_level || "INFO"}`;
+          if (ai.warning_level === "CRITICAL" || ai.warning_level === "WARNING") {
+            playAiWarningBeep(ai.warning_level);
+          }
+        } else {
+          banner.textContent = "";
+          banner.className = "ai-warning-banner";
+        }
+      }
+
+      // Update Camera Card AI Mode Buttons
+      const btnOnOff = document.getElementById("btnAiOnOff");
+      const btnDetect = document.getElementById("btnAiDetectMode");
+      const btnSafety = document.getElementById("btnAiSafetyMode");
+      if (btnOnOff) {
+        btnOnOff.textContent = ai.enabled ? "AI ON" : "AI OFF";
+        btnOnOff.classList.toggle("active", Boolean(ai.enabled));
+      }
+      if (btnDetect) {
+        btnDetect.classList.toggle("active", Boolean(ai.enabled && ai.mode === "DETECTION"));
+      }
+      if (btnSafety) {
+        btnSafety.classList.toggle("safety-active", Boolean(ai.enabled && ai.mode === "SAFETY_ASSIST"));
+      }
+    }
+
+    function drawAiOverlayOnCanvas(ctx, w, h) {
+      if (!aiVisionState || !aiVisionState.enabled) return;
+
+      // 1. Subtle LEFT / CENTER / RIGHT corridor guide lines
+      ctx.save();
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.28)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      const xLeft = Math.round(w / 3);
+      const xRight = Math.round((w * 2) / 3);
+      ctx.beginPath();
+      ctx.moveTo(xLeft, 0);
+      ctx.lineTo(xLeft, h);
+      ctx.moveTo(xRight, 0);
+      ctx.lineTo(xRight, h);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Highlight blocked corridor tint
+      const regs = aiVisionState.regions || {};
+      const tintZone = (zObj, x0, zw) => {
+        if (zObj && zObj.blocked) {
+          ctx.fillStyle = zObj.risk === "HIGH" ? "rgba(239, 68, 68, 0.14)" : "rgba(245, 158, 11, 0.10)";
+          ctx.fillRect(x0, 0, zw, h);
+        }
+      };
+      tintZone(regs.LEFT, 0, xLeft);
+      tintZone(regs.CENTER, xLeft, xRight - xLeft);
+      tintZone(regs.RIGHT, xRight, w - xRight);
+
+      // 2. Draw bounding boxes, labels, and confidence percentages
+      const dets = aiVisionState.detections || [];
+      ctx.font = "bold 8px -apple-system, BlinkMacSystemFont, sans-serif";
+      for (let i = 0; i < dets.length; i++) {
+        const d = dets[i];
+        if (!d.bbox || d.bbox.length < 4) continue;
+        const bx1 = Math.round(d.bbox[0] * w);
+        const by1 = Math.round(d.bbox[1] * h);
+        const bx2 = Math.round(d.bbox[2] * w);
+        const by2 = Math.round(d.bbox[3] * h);
+        const bw = Math.max(12, bx2 - bx1);
+        const bh = Math.max(12, by2 - by1);
+        const color = d.color || "#00f0ff";
+
+        // Bounding box
+        ctx.strokeStyle = color;
+        ctx.lineWidth = d.visual_risk === "HIGH" ? 2.0 : 1.4;
+        ctx.strokeRect(bx1, by1, bw, bh);
+
+        // Label text: e.g. "CAR – 94%"
+        const label = d.display_label || `${d.category} – ${Math.round(d.confidence || 0)}%`;
+        const textW = ctx.measureText(label).width + 6;
+        const pillH = 11;
+        const pillY = by1 >= pillH + 2 ? by1 - pillH : by1;
+
+        ctx.fillStyle = "rgba(6, 10, 22, 0.72)";
+        ctx.fillRect(bx1, pillY, textW, pillH);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 0.8;
+        ctx.strokeRect(bx1, pillY, textW, pillH);
+
+        ctx.fillStyle = color;
+        ctx.fillText(label, bx1 + 3, pillY + 8.5);
+      }
+      ctx.restore();
+    }
+
+    function startAiVisionPolling() {
+      updateMuteButtonIcon();
+      const poll = async () => {
+        try {
+          const res = await fetch("/api/ai/status", { cache: "no-store" });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.ai_vision) {
+              updateAiHudAndControls(data.ai_vision);
+            }
+            if (data && data.autonomous) {
+              updateAutonomousUi(data.autonomous);
+            }
+            if (data && typeof data.serial_connected === "boolean") {
+              serialConnectedFlag = data.serial_connected;
+              if (!serialConnectedFlag) {
+                updateHwToast("⚠ Arduino Mega USB disconnected — plug Mega USB cable into Raspberry Pi", true);
+              } else if (Date.now() - lastHwMsgTs >= 2500) {
+                updateHwToast(null);
+              }
+            }
+          }
+        } catch (_) {}
+      };
+      poll();
+      setInterval(poll, 240);
+    }
+
+    /* ==================== BLINK-FREE DOUBLE-BUFFERED CAMERA ==================== */
+    let camLoopRunning = false;
+
+    async function startSimpleCamera() {
+      try {
+        await fetch("/api/camera/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source: "remote_pi", width: 320, height: 240 }),
+        });
+      } catch (_) {}
+
+      if (camLoopRunning) return;
+      camLoopRunning = true;
+
+      const canvas = document.getElementById("simpleCamCanvas");
+      const ctx = canvas.getContext("2d", { alpha: false });
+      const msgEl = document.getElementById("simpleCamMsg");
+      const preloader = new Image();
+
+      const scheduleNext = (delayMs) => {
+        setTimeout(() => {
+          preloader.src = `/api/camera/frame.jpg?t=${Date.now()}`;
+        }, delayMs);
+      };
+
+      preloader.onload = () => {
+        if (preloader.naturalWidth > 0 && preloader.naturalHeight > 0) {
+          if (canvas.width !== preloader.naturalWidth || canvas.height !== preloader.naturalHeight) {
+            canvas.width = preloader.naturalWidth;
+            canvas.height = preloader.naturalHeight;
+          }
+          ctx.drawImage(preloader, 0, 0, canvas.width, canvas.height);
+          drawAiOverlayOnCanvas(ctx, canvas.width, canvas.height);
+          canvas.style.display = "block";
+          msgEl.style.display = "none";
+        }
+        scheduleNext(90);
+      };
+
+      let errorCount = 0;
+      preloader.onerror = () => {
+        errorCount++;
+        if (errorCount % 6 === 0) {
+          fetch("/api/camera/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source: "remote_pi", width: 320, height: 240 }),
+          }).catch(() => {});
+        }
+        scheduleNext(250);
+      };
+
+      scheduleNext(10);
+    }
+
+    /* ==================== INITIALIZE INTERACTIONS ==================== */
+    window.addEventListener("DOMContentLoaded", () => {
+      applyTheme(localStorage.getItem("liftmate_theme") || "dark");
+      renderServoFader(SERVO_MIN_DEG);
+      renderWheelSpeedSlider(DEFAULT_WHEEL_PWM);
+      startSimpleCamera();
+      startAiVisionPolling();
+      if (window.LiftMateOfflineMap) {
+        window.liftmateMap = new window.LiftMateOfflineMap("liftmateOfflineMap");
+      }
+
+      // Wheel Speed Slider (Low to Max)
+      const speedTrack = document.getElementById("wheelSpeedTrack");
+      let activeSpeedDrag = false;
+      const updateSpeedFromX = (clientX) => {
+        const rect = speedTrack.getBoundingClientRect();
+        const pad = 12;
+        const usableW = Math.max(20, rect.width - pad * 2);
+        const relX = Math.max(0, Math.min(usableW, clientX - rect.left - pad));
+        const pwm = Math.round(MIN_WHEEL_PWM + (relX / usableW) * (MAX_WHEEL_PWM - MIN_WHEEL_PWM));
+        renderWheelSpeedSlider(pwm);
+      };
+      if (speedTrack) {
+        speedTrack.addEventListener("mousedown", (ev) => {
+          ev.preventDefault();
+          activeSpeedDrag = true;
+          updateSpeedFromX(ev.clientX);
+        });
+        window.addEventListener("mousemove", (ev) => {
+          if (activeSpeedDrag) updateSpeedFromX(ev.clientX);
+        });
+        window.addEventListener("mouseup", () => { activeSpeedDrag = false; });
+
+        speedTrack.addEventListener("touchstart", (ev) => {
+          ev.preventDefault();
+          activeSpeedDrag = true;
+          updateSpeedFromX(ev.touches[0].clientX);
+        }, { passive: false });
+        window.addEventListener("touchmove", (ev) => {
+          if (activeSpeedDrag) {
+            ev.preventDefault();
+            updateSpeedFromX(ev.touches[0].clientX);
+          }
+        }, { passive: false });
+        window.addEventListener("touchend", () => { activeSpeedDrag = false; });
+        window.addEventListener("touchcancel", () => { activeSpeedDrag = false; });
+      }
+
+      // Instant touchstart response for STOP and Reset buttons on mobile
+      const stopBtn = document.getElementById("stopBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      if (stopBtn) {
+        stopBtn.addEventListener("touchstart", (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          stopEverything();
+        }, { passive: false });
+      }
+      if (resetBtn) {
+        resetBtn.addEventListener("touchstart", (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          resetEverything();
+        }, { passive: false });
+      }
+
+      // 1. Compass & Rotate Buttons
+      document.querySelectorAll(".compass-btn, .rotate-pill").forEach((btn) => {
+        const start = (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          btn.classList.add("active");
+          const vx = parseFloat(btn.getAttribute("data-vx"));
+          const vy = parseFloat(btn.getAttribute("data-vy"));
+          const w = parseFloat(btn.getAttribute("data-w"));
+          wheelVec = { vx, vy, w, active: true };
+          setPuckPosition(vx, vy);
+          sendWheelsNow();
+        };
+        const end = (ev) => {
+          if (!wheelVec.active) return;
+          ev.preventDefault();
+          ev.stopPropagation();
+          btn.classList.remove("active");
+          stopWheels();
+        };
+        btn.addEventListener("mousedown", start);
+        btn.addEventListener("touchstart", start, { passive: false });
+        btn.addEventListener("mouseup", end);
+        btn.addEventListener("mouseleave", end);
+        btn.addEventListener("touchend", end);
+        btn.addEventListener("touchcancel", end);
+      });
+
+      // 2. 360° Circular Wheel Drag
+      const circle = document.getElementById("omniCircle");
+      let draggingCircle = false;
+
+      const updateCircleFromXY = (clientX, clientY) => {
+        const rect = circle.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const maxR = Math.max(30, rect.width * 0.34);
+        let dx = clientX - cx;
+        let dy = clientY - cy;
+        const dist = Math.hypot(dx, dy);
+        if (dist > maxR && dist > 0) {
+          dx = (dx / dist) * maxR;
+          dy = (dy / dist) * maxR;
+        }
+        const nx = +(dx / maxR).toFixed(2);
+        const ny = +(-dy / maxR).toFixed(2);
+        wheelVec = { vx: nx, vy: ny, w: 0, active: true };
+        setPuckPosition(nx, ny);
+        sendWheelsNow();
+      };
+
+      circle.addEventListener("mousedown", (ev) => {
+        if (ev.target.closest(".compass-btn")) return;
+        ev.preventDefault();
+        draggingCircle = true;
+        updateCircleFromXY(ev.clientX, ev.clientY);
+      });
+      window.addEventListener("mousemove", (ev) => {
+        if (draggingCircle) updateCircleFromXY(ev.clientX, ev.clientY);
+      });
+      window.addEventListener("mouseup", () => {
+        if (draggingCircle) {
+          draggingCircle = false;
+          stopWheels();
+        }
+      });
+
+      circle.addEventListener("touchstart", (ev) => {
+        if (ev.target.closest(".compass-btn")) return;
+        ev.preventDefault();
+        draggingCircle = true;
+        updateCircleFromXY(ev.touches[0].clientX, ev.touches[0].clientY);
+      }, { passive: false });
+      window.addEventListener("touchmove", (ev) => {
+        if (draggingCircle) {
+          ev.preventDefault();
+          updateCircleFromXY(ev.touches[0].clientX, ev.touches[0].clientY);
+        }
+      }, { passive: false });
+      window.addEventListener("touchend", () => {
+        if (draggingCircle) {
+          draggingCircle = false;
+          stopWheels();
+        }
+      });
+
+      // 3. Vertical Actuator Sliders (Jack, Holder, Both - spring back to 0 on release)
+      let activeActuatorTarget = null;
+      document.querySelectorAll(".v-track[data-target]").forEach((track) => {
+        const target = track.getAttribute("data-target");
+
+        const updateFromY = (clientY) => {
+          const rect = track.getBoundingClientRect();
+          const midY = rect.top + rect.height / 2;
+          const halfH = Math.max(20, rect.height / 2 - 14);
+          let dy = Math.max(-halfH, Math.min(halfH, midY - clientY));
+          let pwm = Math.round((dy / halfH) * 255);
+          if (Math.abs(pwm) < 12) pwm = 0;
+          setActuatorTarget(target, pwm);
+        };
+
+        const endFader = () => {
+          if (activeActuatorTarget !== target) return;
+          activeActuatorTarget = null;
+          setActuatorTarget(target, 0);
+        };
+
+        track.addEventListener("mousedown", (ev) => {
+          ev.preventDefault();
+          ensureJackAudioContext();
+          activeActuatorTarget = target;
+          updateFromY(ev.clientY);
+        });
+        window.addEventListener("mousemove", (ev) => {
+          if (activeActuatorTarget === target) updateFromY(ev.clientY);
+        });
+        window.addEventListener("mouseup", endFader);
+
+        track.addEventListener("touchstart", (ev) => {
+          ev.preventDefault();
+          ensureJackAudioContext();
+          activeActuatorTarget = target;
+          updateFromY(ev.touches[0].clientY);
+        }, { passive: false });
+        window.addEventListener("touchmove", (ev) => {
+          if (activeActuatorTarget === target) {
+            ev.preventDefault();
+            updateFromY(ev.touches[0].clientY);
+          }
+        }, { passive: false });
+        window.addEventListener("touchend", endFader);
+        window.addEventListener("touchcancel", endFader);
+      });
+
+      // 4. Vertical Servo Slider (Holds position)
+      const servoTrack = document.getElementById("vTrackServo");
+      let activeServo = false;
+
+      cancelActiveGestures = () => {
+        draggingCircle = false;
+        activeActuatorTarget = null;
+        activeServo = false;
+      };
+
+      const updateServoFromY = (clientY) => {
+        const rect = servoTrack.getBoundingClientRect();
+        const pad = 14;
+        const usableH = Math.max(20, rect.height - pad * 2);
+        const relY = Math.max(0, Math.min(usableH, rect.bottom - pad - clientY));
+        const angle = Math.round(SERVO_MIN_DEG + (relY / usableH) * (SERVO_MAX_DEG - SERVO_MIN_DEG));
+        setServoAngle(angle);
+      };
+
+      servoTrack.addEventListener("mousedown", (ev) => {
+        ev.preventDefault();
+        activeServo = true;
+        updateServoFromY(ev.clientY);
+      });
+      window.addEventListener("mousemove", (ev) => {
+        if (activeServo) updateServoFromY(ev.clientY);
+      });
+      window.addEventListener("mouseup", () => { activeServo = false; });
+
+      servoTrack.addEventListener("touchstart", (ev) => {
+        ev.preventDefault();
+        activeServo = true;
+        updateServoFromY(ev.touches[0].clientY);
+      }, { passive: false });
+      window.addEventListener("touchmove", (ev) => {
+        if (activeServo) {
+          ev.preventDefault();
+          updateServoFromY(ev.touches[0].clientY);
+        }
+      }, { passive: false });
+      window.addEventListener("touchend", () => { activeServo = false; });
+    });
+  </script>
+</body>
+</html>

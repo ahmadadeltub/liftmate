@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LiftMate</string>
+    <string name="brand_subtitle">Autonomous &amp; Manual Robot Controller</string>
+    <string name="btn_reset">RESET</string>
+    <string name="btn_stop_all">STOP ALL</string>
+    <string name="connecting_auto">Searching for Robot (10.42.0.1)…</string>
+    <string name="open_spare_web">Spare Web UI</string>
+    <string name="wifi_settings">Wi-Fi Settings</string>
+</resources>

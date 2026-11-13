@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LIFTMATE — Advanced Robotic Control & Diagnostic Center</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+
+  <!-- ==================== PERSISTENT TOP EMERGENCY & STATUS HEADER ==================== -->
+  <header class="top-header">
+    <div class="brand-block">
+      <div class="brand-logo">LM</div>
+      <div class="brand-title">
+        <h1>LIFTMATE <span id="modeBadge" class="pill cyan" style="font-size:10px;padding:2px 8px;">HARDWARE MODE</span></h1>
+        <p>Advanced Robotic Control &amp; Diagnostic Center</p>
+      </div>
+    </div>
+
+    <div class="status-pills">
+      <div id="safetyStatePill" class="pill amber">
+        <span class="dot"></span>
+        <span>STATE: <strong id="headerSafetyState">DISCONNECTED</strong></span>
+      </div>
+      <div id="serialStatusPill" class="pill red">
+        <span class="dot"></span>
+        <span id="headerSerialText">MEGA: OFFLINE</span>
+      </div>
+      <div id="imuStatusPill" class="pill amber">
+        <span class="dot"></span>
+        <span id="headerImuText">IMU: --</span>
+      </div>
+      <div id="camStatusPill" class="pill">
+        <span class="dot"></span>
+        <span id="headerCamText">CAM: STOPPED</span>
+      </div>
+    </div>
+
+    <div class="emergency-bar">
+      <a href="/simple" class="btn btn-cyan" style="text-decoration:none;">← SIMPLE SLIDERS</a>
+      <button id="btnArmSystem" class="btn btn-green" onclick="armSystem()">ARM SYSTEM</button>
+      <button id="btnDisarmSystem" class="btn btn-amber" onclick="disarmSystem()">DISARM</button>
+      <button id="btnResetEstop" class="btn btn-cyan" onclick="resetEmergencyStop()" style="display:none;">RESET E-STOP</button>
+      <button id="btnStopAll" class="btn btn-stop-all" onclick="stopAllNow()">STOP ALL</button>
+      <button id="btnLatchEstop" class="btn btn-estop-latch" onclick="triggerEmergencyStop()">E-STOP LATCH</button>
+    </div>
+  </header>
+
+  <div class="app-layout">
+    <!-- ==================== SIDEBAR NAVIGATION ==================== -->
+    <aside class="sidebar">
+      <div class="sidebar-section-label">Mission Modules</div>
+      <button class="nav-btn active" data-tab="tab-overview" onclick="switchTab('tab-overview', this)">
+        <span>1. System Overview</span>
+      </button>
+      <button class="nav-btn" data-tab="tab-wheels" onclick="switchTab('tab-wheels', this)">
+        <span>2. Wheel Testing</span>
+        <span class="nav-badge">4CH</span>
+      </button>
+      <button class="nav-btn" data-tab="tab-movement" onclick="switchTab('tab-movement', this)">
+        <span>3. Movement Control</span>
+        <span class="nav-badge">MECANUM</span>
+      </button>
+      <button class="nav-btn" data-tab="tab-upper-jack" onclick="switchTab('tab-upper-jack', this)">
+        <span>4. Upper Actuators</span>
+        <span class="nav-badge">100mm</span>
+      </button>
+      <button class="nav-btn" data-tab="tab-lower-jack" onclick="switchTab('tab-lower-jack', this)">
+        <span>5. Lower Actuators</span>
+        <span class="nav-badge">30mm</span>
+      </button>
+      <button class="nav-btn" data-tab="tab-camera" onclick="switchTab('tab-camera', this)">
+        <span>6. Camera Monitor</span>
+      </button>
+      <button class="nav-btn" data-tab="tab-servo" onclick="switchTab('tab-servo', this)">
+        <span>7. Servo Controller</span>
+        <span class="nav-badge">PIN 8</span>
+      </button>
+      <button class="nav-btn" data-tab="tab-imu" onclick="switchTab('tab-imu', this)">
+        <span>8. IMU Monitoring</span>
+        <span class="nav-badge">0x29</span>
+      </button>
+      <button class="nav-btn" data-tab="tab-diagnostics" onclick="switchTab('tab-diagnostics', this)">
+        <span>9. Diagnostics &amp; Logs</span>
+      </button>
+      <button class="nav-btn" data-tab="tab-safety" onclick="switchTab('tab-safety', this)">
+        <span>10. Safety &amp; Electrical</span>
+      </button>
+
+      <div class="sidebar-section-label" style="margin-top:10px;">Layout Mode</div>
+      <label class="checkbox-row" style="padding:6px 10px;">
+        <input type="checkbox" id="chkShowAllPanels" onchange="toggleShowAllPanels(this.checked)" />
+        <span>Show All 10 Panels</span>
+      </label>
+    </aside>
+
+    <!-- ==================== MAIN CONTENT AREA ==================== -->
+    <main class="main-content">
+
+      <!-- Global Feedback Banner -->
+      <div id="toastBanner" class="toast-banner">
+        <span id="toastMessage">LiftMate Diagnostic Center initialized. Ensure wheels are elevated off the ground before arming.</span>
+        <span id="wsIndicator" style="font-size:11px;color:var(--accent-cyan);">WS: CONNECTING</span>
+      </div>
+
+      <!-- ==================== 1. SYSTEM OVERVIEW ==================== -->
+      <section id="tab-overview" class="tab-panel active">
+        <div class="section-header">
+          <div>
+            <h2>1. System Overview &amp; Hardware Readiness</h2>
+            <p>Research Prototype Status — Unloaded Bench &amp; Elevated-Wheel Diagnostic Mode Only</p>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-cyan" onclick="pingArduino()">PING ARDUINO</button>
+            <button id="btnToggleSimOverview" class="btn" onclick="toggleSimulationMode()">TOGGLE SIMULATION MODE</button>
+          </div>
+        </div>
+
+        <div class="grid-4">
+          <div class="card">
+            <div class="card-title"><span>Arduino Mega 2560</span><span id="ovMegaBadge" class="pill">OFFLINE</span></div>
+            <div class="kv-row"><span>Serial Port</span><span id="ovPort">--</span></div>
+            <div class="kv-row"><span>Baud Rate</span><span id="ovBaud">115200</span></div>
+            <div class="kv-row"><span>READY Handshake</span><span id="ovReady">NO</span></div>
+            <div class="kv-row"><span>Command Latency</span><span id="ovLatency">-- ms</span></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Mecanum Drive (4× DC)</span><span id="ovCalBadge" class="pill amber">UNCALIBRATED</span></div>
+            <div class="kv-row"><span>M1 (PWM4 / 26,27)</span><span id="ovM1">0 PWM</span></div>
+            <div class="kv-row"><span>M2 (PWM5 / 28,29)</span><span id="ovM2">0 PWM</span></div>
+            <div class="kv-row"><span>M3 (PWM6 / 44,45)</span><span id="ovM3">0 PWM</span></div>
+            <div class="kv-row"><span>M4 (PWM7 / 46,47)</span><span id="ovM4">0 PWM</span></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Actuator Groups &amp; Servo</span><span id="ovDriverBadge" class="pill amber">VERIFY DRIVER</span></div>
+            <div class="kv-row"><span>Upper Jack (100mm ×4)</span><span id="ovUpper">STOPPED (0)</span></div>
+            <div class="kv-row"><span>Lower Base (30mm ×4)</span><span id="ovLower">STOPPED (0)</span></div>
+            <div class="kv-row"><span>Servo (Pin 8)</span><span id="ovServo">DISABLED (90°)</span></div>
+            <div class="kv-row"><span>Position Sensors</span><span>None (Open-Loop)</span></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>BNO055 IMU &amp; Camera</span><span id="ovImuBadge" class="pill">OFFLINE</span></div>
+            <div class="kv-row"><span>Heading (Yaw)</span><span id="ovHeading">-- °</span></div>
+            <div class="kv-row"><span>Pitch / Roll</span><span id="ovPitchRoll">-- ° / -- °</span></div>
+            <div class="kv-row"><span>Camera Source</span><span id="ovCamBackend">NONE</span></div>
+            <div class="kv-row"><span>Camera FPS</span><span id="ovCamFps">0.0 FPS</span></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Hardware Pin Mapping Reference Card -->
+          <div class="card">
+            <div class="card-title"><span>Verified Arduino Mega 2560 Pin Assignment (Robot_jack_code.ino)</span></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Channel</th>
+                    <th>PWM Pin</th>
+                    <th>IN1 (inA)</th>
+                    <th>IN2 (inB)</th>
+                    <th>Hardware Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Wheel Motor 1</td><td class="mono">Pin 4</td><td class="mono">Pin 26</td><td class="mono">Pin 27</td><td>Calibrate physical corner in Wheel Wizard</td></tr>
+                  <tr><td>Wheel Motor 2</td><td class="mono">Pin 5</td><td class="mono">Pin 28</td><td class="mono">Pin 29</td><td>Original comment: Right Rear</td></tr>
+                  <tr><td>Wheel Motor 3</td><td class="mono">Pin 6</td><td class="mono">Pin 44</td><td class="mono">Pin 45</td><td>Original comment: Left Front</td></tr>
+                  <tr><td>Wheel Motor 4</td><td class="mono">Pin 7</td><td class="mono">Pin 46</td><td class="mono">Pin 47</td><td>Original comment: Right Front</td></tr>
+                  <tr><td>Lower Actuator Group</td><td class="mono">Pin 2</td><td class="mono">Pin 22</td><td class="mono">Pin 23</td><td>4× 12V 30mm actuators wired as ONE group</td></tr>
+                  <tr><td>Upper Actuator Group</td><td class="mono">Pin 3</td><td class="mono">Pin 24</td><td class="mono">Pin 25</td><td>4× 12V 50N 100mm actuators wired as ONE group</td></tr>
+                  <tr><td>Servo Signal</td><td class="mono">Pin 8</td><td class="mono">--</td><td class="mono">--</td><td>Lazy-attached on first SERVO command</td></tr>
+                  <tr><td>Adafruit BNO055 IMU</td><td class="mono">I2C 0x29</td><td class="mono">SDA = 20</td><td class="mono">SCL = 21</td><td>100kHz I2C with 25ms bus timeout protection</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Guided 14-Step Physical Testing Sequence -->
+          <div class="card">
+            <div class="card-title"><span>Guided 14-Step Physical Verification Sequence</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px;max-height:290px;overflow-y:auto;">
+              <label class="checklist-item"><input type="checkbox" /> <span>1. Verify 12V motor power isolation &amp; elevate all 4 wheels safely off the ground.</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>2. Connect Arduino Mega 2560 via USB (115200 baud).</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>3. Verify serial communication &amp; <code>#,PING,#</code> → <code>#,PONG,#</code> latency.</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>4. Verify STOP ALL &amp; Latched E-STOP block motion commands.</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>5. Test one wheel at a time (Motor 1–4) at 50 PWM with timed jog pulses.</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>6. Calibrate physical wheel order (FL, FR, RL, RR) &amp; polarity inversion.</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>7. Test Mecanum movements (Forward, Strafe, Diagonal, Rotate) at low speed.</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>8. Verify actuator driver current rating &amp; power supply protection.</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>9. Test unloaded Lower Base (30mm) actuator group with short hold/pulse.</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>10. Test unloaded Upper Jack (100mm) actuator group with short hold/pulse.</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>11. Enable Servo gate &amp; verify safe angular travel limits on Pin 8.</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>12. Verify Camera live preview (Picamera2 CSI / Remote Pi 3 / USB OpenCV).</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>13. Verify BNO055 IMU Heading, Pitch, Roll telemetry &amp; tilt warning threshold.</span></label>
+              <label class="checklist-item"><input type="checkbox" /> <span>14. Verify watchdog auto-stop (450ms) and serial disconnect re-arm lock.</span></label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 2. WHEEL MOTOR TESTING ==================== -->
+      <section id="tab-wheels" class="tab-panel">
+        <div class="section-header">
+          <div>
+            <h2>2. Independent Wheel Motor Testing &amp; Mapping Wizard</h2>
+            <p>Test Motors 1–4 individually with wheels elevated. Default test speed: 50 PWM. Timed jogs auto-stop in 200–500ms.</p>
+          </div>
+          <div class="btn-row">
+            <div class="control-group" style="flex-direction:row;align-items:center;gap:8px;">
+              <label>Timed Jog Pulse (ms):</label>
+              <input type="number" id="wheelJogMs" value="350" min="200" max="500" step="50" style="width:80px;" />
+            </div>
+            <button class="btn btn-stop-all" onclick="stopAllWheels()">STOP ALL WHEELS</button>
+          </div>
+        </div>
+
+        <!-- 4 Independent Wheel Test Cards -->
+        <div class="grid-4" id="wheelCardsContainer">
+          <!-- Populated dynamically by app.js for Motors 1, 2, 3, 4 -->
+        </div>
+
+        <!-- Interactive Wheel Mapping & Polarity Calibration Wizard -->
+        <div class="card">
+          <div class="card-title">
+            <span>Interactive Wheel Mapping &amp; Polarity Calibration Wizard</span>
+            <span id="calWizardBadge" class="pill amber">Calibration Not Yet Confirmed</span>
+          </div>
+          <p style="font-size:12.5px;color:var(--text-secondary);">
+            Jog each motor above at 50 PWM while observing which physical wheel spins. Assign each motor channel (1–4) to its unique physical corner and check "Invert Direction" if clicking Forward spun the wheel backward.
+          </p>
+          <div class="grid-4">
+            <div class="control-group">
+              <label>Motor 1 (PWM 4, IN 26/27)</label>
+              <select id="calPos1">
+                <option value="front_left">Front Left (FL)</option>
+                <option value="front_right">Front Right (FR)</option>
+                <option value="rear_left" selected>Rear Left (RL)</option>
+                <option value="rear_right">Rear Right (RR)</option>
+              </select>
+              <label class="checkbox-row"><input type="checkbox" id="calInv1" /> Invert Motor 1 Polarity</label>
+            </div>
+            <div class="control-group">
+              <label>Motor 2 (PWM 5, IN 28/29)</label>
+              <select id="calPos2">
+                <option value="front_left">Front Left (FL)</option>
+                <option value="front_right">Front Right (FR)</option>
+                <option value="rear_left">Rear Left (RL)</option>
+                <option value="rear_right" selected>Rear Right (RR)</option>
+              </select>
+              <label class="checkbox-row"><input type="checkbox" id="calInv2" /> Invert Motor 2 Polarity</label>
+            </div>
+            <div class="control-group">
+              <label>Motor 3 (PWM 6, IN 44/45)</label>
+              <select id="calPos3">
+                <option value="front_left" selected>Front Left (FL)</option>
+                <option value="front_right">Front Right (FR)</option>
+                <option value="rear_left">Rear Left (RL)</option>
+                <option value="rear_right">Rear Right (RR)</option>
+              </select>
+              <label class="checkbox-row"><input type="checkbox" id="calInv3" /> Invert Motor 3 Polarity</label>
+            </div>
+            <div class="control-group">
+              <label>Motor 4 (PWM 7, IN 46/47)</label>
+              <select id="calPos4">
+                <option value="front_left">Front Left (FL)</option>
+                <option value="front_right" selected>Front Right (FR)</option>
+                <option value="rear_left">Rear Left (RL)</option>
+                <option value="rear_right">Rear Right (RR)</option>
+              </select>
+              <label class="checkbox-row"><input type="checkbox" id="calInv4" /> Invert Motor 4 Polarity</label>
+            </div>
+          </div>
+          <div class="btn-row" style="justify-content:space-between;align-items:center;margin-top:6px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <label style="font-size:12.5px;color:var(--text-secondary);">Max PWM Output Cap:</label>
+              <input type="number" id="calMaxPwm" value="200" min="40" max="255" style="width:85px;" />
+            </div>
+            <button class="btn btn-primary" onclick="saveWheelCalibration()">SAVE CALIBRATION TO CONFIG</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 3. ROBOT MOVEMENT CONTROL ==================== -->
+      <section id="tab-movement" class="tab-panel">
+        <div class="section-header">
+          <div>
+            <h2>3. Omnidirectional Mecanum Movement Control</h2>
+            <p>Press-and-hold directional control with 450ms watchdog protection. Releasing button or losing window focus stops immediately.</p>
+          </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="chkKeyboardDrive" />
+            <span>Enable Keyboard Hold Controls (W/A/S/D/Q/E/SPACE)</span>
+          </label>
+        </div>
+
+        <div class="grid-2">
+          <!-- Directional Control Pad -->
+          <div class="card">
+            <div class="card-title">
+              <span>Press-and-Hold Mecanum Directional Pad</span>
+              <span id="activeDriveBadge" class="pill">STOP</span>
+            </div>
+
+            <div class="control-group">
+              <label>
+                <span>Movement Speed (PWM)</span>
+                <strong id="driveSpeedLabel">75 PWM</strong>
+              </label>
+              <input type="range" id="driveSpeedSlider" min="30" max="200" value="75"
+                     oninput="document.getElementById('driveSpeedLabel').textContent = this.value + ' PWM'" />
+            </div>
+
+            <div class="dpad-grid">
+              <button class="dpad-btn" data-dir="FORWARD_LEFT"><span>↖</span><span>FWD-LEFT</span></button>
+              <button class="dpad-btn" data-dir="FORWARD"><span>↑</span><span>FORWARD (W)</span></button>
+              <button class="dpad-btn" data-dir="FORWARD_RIGHT"><span>↗</span><span>FWD-RIGHT</span></button>
+
+              <button class="dpad-btn" data-dir="LEFT_STRAFE"><span>←</span><span>STRAFE L (A)</span></button>
+              <button class="dpad-btn stop-center" onclick="stopAllWheels()"><span>■</span><span>STOP (SPACE)</span></button>
+              <button class="dpad-btn" data-dir="RIGHT_STRAFE"><span>→</span><span>STRAFE R (D)</span></button>
+
+              <button class="dpad-btn" data-dir="BACKWARD_LEFT"><span>↙</span><span>BACK-LEFT</span></button>
+              <button class="dpad-btn" data-dir="BACKWARD"><span>↓</span><span>BACKWARD (S)</span></button>
+              <button class="dpad-btn" data-dir="BACKWARD_RIGHT"><span>↘</span><span>BACK-RIGHT</span></button>
+            </div>
+
+            <div class="btn-row" style="margin-top:8px;">
+              <button class="dpad-btn" style="flex:1;min-height:48px;" data-dir="ROTATE_LEFT">↺ ROTATE LEFT (Q)</button>
+              <button class="dpad-btn" style="flex:1;min-height:48px;" data-dir="ROTATE_RIGHT">↻ ROTATE RIGHT (E)</button>
+            </div>
+          </div>
+
+          <!-- Real-Time Mecanum Kinematics & Chassis Monitor -->
+          <div class="card">
+            <div class="card-title"><span>Live Mecanum Wheel Output Distribution (Commanded PWM)</span></div>
+            <div class="chassis-diagram">
+              <div class="wheel-box">
+                <div class="w-label">FRONT LEFT (FL)</div>
+                <div class="w-pwm" id="kinFL">0</div>
+                <div style="font-size:11px;color:var(--text-muted);" id="kinFLMotor">Motor --</div>
+              </div>
+              <div class="wheel-box">
+                <div class="w-label">FRONT RIGHT (FR)</div>
+                <div class="w-pwm" id="kinFR">0</div>
+                <div style="font-size:11px;color:var(--text-muted);" id="kinFRMotor">Motor --</div>
+              </div>
+              <div class="wheel-box">
+                <div class="w-label">REAR LEFT (RL)</div>
+                <div class="w-pwm" id="kinRL">0</div>
+                <div style="font-size:11px;color:var(--text-muted);" id="kinRLMotor">Motor --</div>
+              </div>
+              <div class="wheel-box">
+                <div class="w-label">REAR RIGHT (RR)</div>
+                <div class="w-pwm" id="kinRR">0</div>
+                <div style="font-size:11px;color:var(--text-muted);" id="kinRRMotor">Motor --</div>
+              </div>
+            </div>
+            <div class="kv-row"><span>Feedback Type</span><span>Commanded Open-Loop PWM (No physical wheel encoders)</span></div>
+            <div class="kv-row"><span>Firmware Watchdog</span><span>450 ms (Auto-stop on packet loss)</span></div>
+            <div class="kv-row"><span>Jack Interlock</span><span>Driving wheels automatically halts both actuator groups</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 4. UPPER LINEAR ACTUATORS (100mm) ==================== -->
+      <section id="tab-upper-jack" class="tab-panel">
+        <div class="section-header">
+          <div>
+            <h2>4. UPPER JACK – 100mm (Grouped Control)</h2>
+            <p>4 × 12V, 50N, 100mm stroke linear actuators wired to a single channel (PWM=3, IN1=24, IN2=25).</p>
+          </div>
+          <span class="pill amber">Position feedback unavailable (Open-Loop Group)</span>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <span>UPPER JACK – 100mm Manual Controls</span>
+              <span id="upperStateBadge" class="pill">STOPPED</span>
+            </div>
+
+            <div class="kv-row"><span>Hardware Grouping</span><span>All 4 upper actuators operate together as 1 channel</span></div>
+            <div class="kv-row"><span>Rated Force / Stroke</span><span>4 × 50N (12V DC) / 100mm Stroke</span></div>
+            <div class="kv-row"><span>Position Feedback</span><span style="color:var(--status-amber);">Position feedback unavailable</span></div>
+            <div class="kv-row"><span>Commanded PWM / State</span><span id="upperCmdText">0 PWM (STOPPED)</span></div>
+            <div class="kv-row"><span>Current Run Duration</span><span id="upperDurationText">0.00 s (Hard limit: 10.0 s)</span></div>
+
+            <div class="control-group">
+              <label><span>Upper Actuator PWM Speed</span><strong id="upperPwmVal">120 PWM</strong></label>
+              <input type="range" id="upperPwmSlider" min="40" max="255" value="120"
+                     oninput="document.getElementById('upperPwmVal').textContent = this.value + ' PWM'" />
+            </div>
+
+            <div class="btn-row">
+              <button class="btn btn-hold" id="btnHoldUpperExtend">▲ HOLD TO EXTEND</button>
+              <button class="btn btn-hold" id="btnHoldUpperRetract">▼ HOLD TO RETRACT</button>
+              <button class="btn btn-stop-all" onclick="commandActuator('UPPER', 'STOP', 0)">■ STOP UPPER</button>
+            </div>
+
+            <div class="btn-row" style="align-items:center;margin-top:4px;">
+              <span style="font-size:12px;color:var(--text-secondary);">Short Timed Jog Pulse:</span>
+              <input type="number" id="upperPulseMs" value="300" min="100" max="1500" step="50" style="width:80px;" />
+              <span style="font-size:12px;color:var(--text-secondary);">ms</span>
+              <button class="btn btn-cyan" onclick="pulseActuator('UPPER', 'EXTEND')">PULSE EXTEND</button>
+              <button class="btn btn-cyan" onclick="pulseActuator('UPPER', 'RETRACT')">PULSE RETRACT</button>
+            </div>
+
+            <label class="checkbox-row" style="margin-top:4px;">
+              <input type="checkbox" id="chkUpperInvert" onchange="updateActuatorSettings()" />
+              <span>Invert Upper Actuator Direction Polarity</span>
+            </label>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Upper Jack Safety Interlocks &amp; Command History</span></div>
+            <label class="checkbox-row">
+              <input type="checkbox" id="chkDriverVerifiedUpper" onchange="syncDriverVerified(this.checked)" />
+              <span><strong>Confirm Motor Driver &amp; 12V Supply Rated for 4 Parallel Actuators</strong> (Required before motion)</span>
+            </label>
+            <p style="font-size:12px;color:var(--text-secondary);">
+              Never assume the actuator has reached 0mm or 100mm merely because a timer elapsed. Do not auto-home without physical limit switches.
+            </p>
+            <div class="table-wrap" style="max-height:200px;">
+              <table>
+                <thead><tr><th>Time</th><th>Action</th><th>PWM</th><th>Pulse (ms)</th></tr></thead>
+                <tbody id="upperHistoryTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 5. LOWER LINEAR ACTUATORS (30mm) ==================== -->
+      <section id="tab-lower-jack" class="tab-panel">
+        <div class="section-header">
+          <div>
+            <h2>5. LOWER BASE – 30mm (Grouped Control)</h2>
+            <p>4 × 12V, 30mm stroke linear actuators wired to a single channel (PWM=2, IN1=22, IN2=23).</p>
+          </div>
+          <span class="pill amber">Position feedback unavailable (Open-Loop Group)</span>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <span>LOWER BASE – 30mm Manual Controls</span>
+              <span id="lowerStateBadge" class="pill">STOPPED</span>
+            </div>
+
+            <div class="kv-row"><span>Hardware Grouping</span><span>All 4 lower actuators operate together as 1 channel</span></div>
+            <div class="kv-row"><span>Rated Force / Stroke</span><span>Force rating unconfirmed (12V DC) / 30mm Stroke</span></div>
+            <div class="kv-row"><span>Position Feedback</span><span style="color:var(--status-amber);">Position feedback unavailable</span></div>
+            <div class="kv-row"><span>Commanded PWM / State</span><span id="lowerCmdText">0 PWM (STOPPED)</span></div>
+            <div class="kv-row"><span>Current Run Duration</span><span id="lowerDurationText">0.00 s (Hard limit: 5.0 s)</span></div>
+
+            <div class="control-group">
+              <label><span>Lower Actuator PWM Speed</span><strong id="lowerPwmVal">120 PWM</strong></label>
+              <input type="range" id="lowerPwmSlider" min="40" max="255" value="120"
+                     oninput="document.getElementById('lowerPwmVal').textContent = this.value + ' PWM'" />
+            </div>
+
+            <div class="btn-row">
+              <button class="btn btn-hold" id="btnHoldLowerExtend">▲ HOLD TO EXTEND</button>
+              <button class="btn btn-hold" id="btnHoldLowerRetract">▼ HOLD TO RETRACT</button>
+              <button class="btn btn-stop-all" onclick="commandActuator('LOWER', 'STOP', 0)">■ STOP LOWER</button>
+            </div>
+
+            <div class="btn-row" style="align-items:center;margin-top:4px;">
+              <span style="font-size:12px;color:var(--text-secondary);">Short Timed Jog Pulse:</span>
+              <input type="number" id="lowerPulseMs" value="250" min="100" max="1000" step="50" style="width:80px;" />
+              <span style="font-size:12px;color:var(--text-secondary);">ms</span>
+              <button class="btn btn-cyan" onclick="pulseActuator('LOWER', 'EXTEND')">PULSE EXTEND</button>
+              <button class="btn btn-cyan" onclick="pulseActuator('LOWER', 'RETRACT')">PULSE RETRACT</button>
+            </div>
+
+            <label class="checkbox-row" style="margin-top:4px;">
+              <input type="checkbox" id="chkLowerInvert" onchange="updateActuatorSettings()" />
+              <span>Invert Lower Actuator Direction Polarity</span>
+            </label>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Lower Base Interlocks &amp; Command History</span></div>
+            <label class="checkbox-row">
+              <input type="checkbox" id="chkDriverVerifiedLower" onchange="syncDriverVerified(this.checked)" />
+              <span><strong>Confirm Motor Driver &amp; 12V Supply Rated for 4 Parallel Actuators</strong></span>
+            </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="chkAllowDualJacks" onchange="updateActuatorSettings()" />
+              <span>Allow Simultaneous Upper + Lower Actuation (Default OFF for electrical safety)</span>
+            </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="chkRequireImuLifting" onchange="updateActuatorSettings()" />
+              <span>Require Validated BNO055 IMU Tilt Protection for Lifting</span>
+            </label>
+            <div class="table-wrap" style="max-height:185px;">
+              <table>
+                <thead><tr><th>Time</th><th>Action</th><th>PWM</th><th>Pulse (ms)</th></tr></thead>
+                <tbody id="lowerHistoryTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 6. CAMERA MONITOR ==================== -->
+      <section id="tab-camera" class="tab-panel">
+        <div class="section-header">
+          <div>
+            <h2>6. CAMERA MONITOR</h2>
+            <p>Supports Raspberry Pi Camera (Picamera2 CSI), Remote Pi 3 Camera v2.1, and USB Webcams (OpenCV). No fake previews.</p>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-green" onclick="startCamera()">START CAMERA</button>
+            <button class="btn btn-amber" onclick="stopCamera()">STOP CAMERA</button>
+            <button class="btn btn-cyan" onclick="capturePhoto()">CAPTURE PHOTO</button>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <span>Live Camera Feed</span>
+              <span id="camFeedBadge" class="pill">STOPPED</span>
+            </div>
+            <div class="camera-viewport">
+              <img id="cameraStreamImg" alt="Live Camera Stream" />
+              <div id="cameraPlaceholder" class="camera-placeholder">
+                <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;" id="camErrorTitle">
+                  Camera Stream Inactive
+                </div>
+                <div style="font-size:12.5px;color:var(--text-secondary);" id="camErrorDetail">
+                  Select a camera source and click START CAMERA.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Camera Configuration &amp; Diagnostics</span></div>
+            <div class="control-group">
+              <label>Camera Source</label>
+              <select id="cameraSourceSelect">
+                <option value="auto">Auto-Detect (Picamera2 → Remote Pi 3 → USB OpenCV)</option>
+                <option value="picamera2">Raspberry Pi Camera (Local Picamera2 CSI)</option>
+                <option value="remote_pi">Remote Raspberry Pi 3 Camera v2.1 (192.168.18.36)</option>
+                <option value="usb_0">USB / System Webcam #0 (OpenCV)</option>
+                <option value="usb_1">USB / System Webcam #1 (OpenCV)</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label>Preview Resolution</label>
+              <select id="cameraResSelect">
+                <option value="640x480" selected>640 × 480 (Default — 15–20 FPS)</option>
+                <option value="320x240">320 × 240 (Low Latency)</option>
+                <option value="1280x720">1280 × 720 (HD)</option>
+              </select>
+            </div>
+            <div class="kv-row"><span>Active Backend</span><span id="camDiagBackend">NONE</span></div>
+            <div class="kv-row"><span>Measured Frame Rate</span><span id="camDiagFps">0.0 FPS</span></div>
+            <div class="kv-row"><span>Total Frames Received</span><span id="camDiagFrames">0</span></div>
+            <div class="kv-row"><span>Picamera2 Installed Locally</span><span id="camDiagPicam">NO</span></div>
+            <div class="kv-row"><span>Saved Snapshots</span><span id="camSavedList">None</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 7. SERVO CONTROLLER ==================== -->
+      <section id="tab-servo" class="tab-panel">
+        <div class="section-header">
+          <div>
+            <h2>7. SERVO MOTOR CONTROLLER (Arduino Pin 8)</h2>
+            <p>Lazy-attached on first command to prevent startup movement. Requires explicit operator enable.</p>
+          </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="chkServoEnable" onchange="toggleServoEnable(this.checked)" />
+            <span><strong>Enable Servo Control Gate</strong></span>
+          </label>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <span>Manual Angle &amp; Preset Control</span>
+              <span id="servoStateBadge" class="pill amber">DISABLED</span>
+            </div>
+            <div class="kv-row"><span>Commanded Angle</span><span id="servoCmdAngle">90°</span></div>
+            <div class="kv-row"><span>PWM Signal Pin</span><span>Arduino Pin 8</span></div>
+            <div class="kv-row"><span>Safe Travel Window</span><span id="servoWindowText">10° – 170°</span></div>
+
+            <div class="control-group">
+              <label><span>Servo Angle Slider</span><strong id="servoSliderVal">90°</strong></label>
+              <input type="range" id="servoAngleSlider" min="0" max="180" value="90"
+                     oninput="document.getElementById('servoSliderVal').textContent = this.value + '°'"
+                     onchange="setServoAngle(this.value)" />
+            </div>
+
+            <div class="btn-row">
+              <button class="btn" onclick="setServoAngle(0)">0°</button>
+              <button class="btn" onclick="setServoAngle(45)">45°</button>
+              <button class="btn btn-primary" onclick="centerServo()">CENTER (90°)</button>
+              <button class="btn" onclick="setServoAngle(135)">135°</button>
+              <button class="btn" onclick="setServoAngle(180)">180°</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Safe Angle Limits &amp; Polarity Setup</span></div>
+            <div class="grid-2">
+              <div class="control-group">
+                <label>Safe Minimum Angle (°)</label>
+                <input type="number" id="servoSafeMin" value="10" min="0" max="175" />
+              </div>
+              <div class="control-group">
+                <label>Safe Maximum Angle (°)</label>
+                <input type="number" id="servoSafeMax" value="170" min="5" max="180" />
+              </div>
+            </div>
+            <label class="checkbox-row">
+              <input type="checkbox" id="chkServoInvert" />
+              <span>Reverse Servo Direction (180° − angle)</span>
+            </label>
+            <button class="btn btn-cyan" onclick="saveServoLimits()">UPDATE SAFE SERVO LIMITS</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 8. IMU ORIENTATION MONITORING ==================== -->
+      <section id="tab-imu" class="tab-panel">
+        <div class="section-header">
+          <div>
+            <h2>8. BNO055 IMU Orientation &amp; Tilt Monitoring</h2>
+            <p>Hardware I2C 0x29 (SDA=20, SCL=21). Missing IMU telemetry is never assumed to be zero tilt.</p>
+          </div>
+          <button class="btn btn-cyan" onclick="requestImuSample()">POLL #,IMU,#</button>
+        </div>
+
+        <div class="imu-big-numbers">
+          <div class="imu-metric">
+            <div class="m-label">HEADING (YAW)</div>
+            <div class="m-val" id="imuHeadingVal">-- °</div>
+          </div>
+          <div class="imu-metric">
+            <div class="m-label">PITCH (TILT Y)</div>
+            <div class="m-val" id="imuPitchVal">-- °</div>
+          </div>
+          <div class="imu-metric">
+            <div class="m-label">ROLL (TILT X)</div>
+            <div class="m-val" id="imuRollVal">-- °</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <span>Live Pitch &amp; Roll Telemetry Graph</span>
+              <span id="imuSimBadge" class="pill">LIVE SENSOR</span>
+            </div>
+            <canvas id="imuGraphCanvas" class="imu-canvas" width="560" height="190"></canvas>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Sensor Diagnostics &amp; Tilt Protection Thresholds</span></div>
+            <div class="kv-row"><span>Sensor Connectivity</span><span id="imuConnText">DISCONNECTED</span></div>
+            <div class="kv-row"><span>Calibration / Mode</span><span id="imuCalText">--</span></div>
+            <div class="kv-row"><span>Last Sample Age</span><span id="imuAgeText">-- ms</span></div>
+            <div class="kv-row"><span>Peak Chassis Tilt</span><span id="imuMaxTiltText">-- °</span></div>
+            <div class="grid-2" style="margin-top:6px;">
+              <div class="control-group">
+                <label>Warning Threshold (°)</label>
+                <input type="number" id="imuWarnInput" value="8.0" step="0.5" min="1" max="40" />
+              </div>
+              <div class="control-group">
+                <label>Critical Threshold (°)</label>
+                <input type="number" id="imuCritInput" value="15.0" step="0.5" min="2" max="45" />
+              </div>
+            </div>
+            <button class="btn btn-cyan" onclick="saveImuThresholds()">SAVE TILT THRESHOLDS</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 9. DIAGNOSTICS & LOGS ==================== -->
+      <section id="tab-diagnostics" class="tab-panel">
+        <div class="section-header">
+          <div>
+            <h2>9. Serial Diagnostics &amp; Event Log Center</h2>
+            <p>Single coordinated thread-safe serial service. IMU frames are strictly separated from command ACKs.</p>
+          </div>
+          <div class="btn-row">
+            <a class="btn btn-primary" href="/api/diagnostics/export.csv" download="liftmate_diagnostics.csv">EXPORT LOGS AS CSV</a>
+            <button class="btn" onclick="clearFaults()">CLEAR FAULT BANNER</button>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title"><span>Serial Connection &amp; Protocol Tester</span></div>
+            <div class="control-group">
+              <label>Discovered Serial Ports</label>
+              <select id="serialPortSelect">
+                <option value="auto">Auto-Discover USB Serial</option>
+              </select>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-green" onclick="connectSerial()">CONNECT</button>
+              <button class="btn btn-amber" onclick="disconnectSerial()">DISCONNECT</button>
+              <button class="btn btn-cyan" onclick="pingArduino()">PING TEST</button>
+              <button class="btn" onclick="toggleSimulationMode()">SIMULATION MODE</button>
+            </div>
+            <div class="control-group" style="margin-top:8px;">
+              <label>Send Framed Diagnostic Command (e.g. <code>#,PING,#</code> or <code>#,STOP,#</code>)</label>
+              <div class="btn-row">
+                <input type="text" id="rawCommandInput" value="#,PING,#" style="flex:1;" />
+                <button class="btn btn-cyan" onclick="sendRawCommand()">SEND</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Communication Telemetry Summary</span></div>
+            <div class="kv-row"><span>Last Command Sent</span><span id="diagLastCmd">NONE</span></div>
+            <div class="kv-row"><span>Last Command Response</span><span id="diagLastResp">NONE</span></div>
+            <div class="kv-row"><span>Round-Trip Latency</span><span id="diagLatency">0.0 ms</span></div>
+            <div class="kv-row"><span>Error / Fault Count</span><span id="diagErrCount">0</span></div>
+            <div class="kv-row"><span>Watchdog Timeout Count</span><span id="diagTimeoutCount">0</span></div>
+            <div class="kv-row"><span>Stop Event Count</span><span id="diagStopCount">0</span></div>
+            <div class="kv-row"><span>Last Recorded Fault</span><span id="diagLastFault">None</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span>Diagnostic Event History</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Level</th>
+                  <th>Subsystem</th>
+                  <th>Event</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="diagEventsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 10. SAFETY & ELECTRICAL VERIFICATION ==================== -->
+      <section id="tab-safety" class="tab-panel">
+        <div class="section-header">
+          <div>
+            <h2>10. Safety Control System &amp; Electrical Driver Verification</h2>
+            <p>Software state machine, watchdog configuration, and mandatory motor driver verification checklist.</p>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title"><span>Mandatory Hardwired Emergency-Stop Requirement</span></div>
+            <p style="color:#fca5a5;font-weight:700;font-size:13px;">
+              WARNING: A software STOP ALL button is NOT a substitute for a physical emergency-stop switch.
+            </p>
+            <p style="font-size:12.5px;color:var(--text-secondary);">
+              Before testing under power, wire a physical mushroom-head NC (Normally Closed) Emergency Stop switch in series with the positive 12V supply feeding all wheel and linear actuator motor drivers, while keeping 5V logic power to the Arduino Mega and Raspberry Pi intact so telemetry and diagnostics remain visible during an emergency trip.
+            </p>
+            <div class="kv-row"><span>Software Safety State</span><span id="safetyPanelState">DISCONNECTED</span></div>
+            <div class="kv-row"><span>Wheel Watchdog Timeout</span><span>450 ms (Hardware + Software)</span></div>
+            <div class="kv-row"><span>Actuator Hold Watchdog</span><span>600 ms (Hold-to-Run)</span></div>
+            <div class="kv-row"><span>Upper Jack Cumulative Limit</span><span>10,000 ms Max Continuous</span></div>
+            <div class="kv-row"><span>Lower Base Cumulative Limit</span><span>5,000 ms Max Continuous</span></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Motor Driver Interface Analysis (setMotor() Verification)</span></div>
+            <p style="font-size:12.5px;color:var(--text-secondary);">
+              The existing <code>setMotor()</code> function drives <strong>1 PWM pin + 2 Direction pins (inA, inB)</strong> per channel:
+            </p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Command</th><th>PWM Pin</th><th>IN1 (inA)</th><th>IN2 (inB)</th><th>Bridge Behavior</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Stop (0)</td><td>0</td><td>LOW</td><td>LOW</td><td>Bridge Disabled (Coast)</td></tr>
+                  <tr><td>Forward (+spd)</td><td>spd (1–255)</td><td>HIGH</td><td>LOW</td><td>Forward Drive</td></tr>
+                  <tr><td>Reverse (-spd)</td><td>spd (1–255)</td><td>LOW</td><td>HIGH</td><td>Reverse Drive</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+              <strong>Driver Compatibility Note:</strong> Directly compatible with <strong>L298N</strong> (ENA=PWM, IN1/IN2=Dir), <strong>TB6612FNG</strong>, or <strong>VNH2SP30</strong>. Standard <strong>BTS7960 (IBT-2)</strong> modules use dual PWM inputs (RPWM/LPWM) + R_EN/L_EN and are <em>not</em> drop-in compatible with 1-PWM + 2-Dir pin mapping unless R_EN+L_EN are tied to the PWM pin and RPWM/LPWM to IN1/IN2. Furthermore, driving 4 parallel 12V actuators on a single L298N channel (~2A max) can overload the bridge under stall load — verify driver current capacity first!
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

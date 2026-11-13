@@ -1,0 +1,120 @@
+system:
+  project_name: LiftMate
+  subtitle: Advanced Robotic Control & Diagnostic Center
+  simulation_mode: false
+  host: 127.0.0.1
+  port: 8000
+  allow_lan: false
+serial:
+  port: auto
+  baud_rate: 115200
+  timeout_s: 0.15
+  heartbeat_interval_s: 1.0
+pins:
+  wheel_motors:
+    '1':
+      pwm: 4
+      in1: 26
+      in2: 27
+      note: Position unconfirmed in original sketch
+    '2':
+      pwm: 5
+      in1: 28
+      in2: 29
+      note: Labeled right rear in original sketch
+    '3':
+      pwm: 6
+      in1: 44
+      in2: 45
+      note: Labeled left front in original sketch
+    '4':
+      pwm: 7
+      in1: 46
+      in2: 47
+      note: Labeled right front in original sketch
+  lower_actuator_group:
+    pwm: 2
+    in1: 22
+    in2: 23
+  upper_actuator_group:
+    pwm: 3
+    in1: 24
+    in2: 25
+  servo_pin: 8
+  bno055_i2c:
+    sda: 20
+    scl: 21
+    address: '0x29'
+wheel_calibration:
+  calibrated: false
+  positions:
+    '1': rear_left
+    '2': rear_right
+    '3': front_left
+    '4': front_right
+  inverted:
+    '1': false
+    '2': false
+    '3': false
+    '4': false
+  default_test_pwm: 50
+  default_drive_pwm: 75
+  max_pwm_limit: 200
+  jog_duration_ms: 350
+  ramp_step_pwm: 25
+actuators:
+  driver_electrical_verified: true
+  allow_simultaneous_groups: true
+  require_imu_for_lifting: false
+  upper:
+    name: "UPPER JACK \u2013 100mm"
+    stroke_mm: 100
+    rated_force_n: 50
+    actuator_count: 4
+    voltage_v: 12
+    inverted: false
+    default_pwm: 120
+    max_pwm: 255
+    jog_pulse_ms: 300
+    max_continuous_run_ms: 10000
+    position_feedback_available: false
+  lower:
+    name: "LOWER BASE \u2013 30mm"
+    stroke_mm: 30
+    rated_force_n: 0
+    actuator_count: 4
+    voltage_v: 12
+    inverted: true
+    default_pwm: 120
+    max_pwm: 255
+    jog_pulse_ms: 250
+    max_continuous_run_ms: 5000
+    position_feedback_available: false
+servo:
+  pin: 8
+  enabled: true
+  initial_center_deg: 68
+  safe_min_deg: 6
+  safe_max_deg: 130
+  hard_min_deg: 6
+  hard_max_deg: 130
+  inverted: false
+imu:
+  i2c_address: '0x29'
+  tilt_warning_deg: 8.0
+  tilt_critical_deg: 15.0
+  stale_timeout_ms: 600
+camera:
+  preferred_source: remote_pi
+  width: 320
+  height: 240
+  target_fps: 10
+  usb_index: 0
+  remote_pi_host: 192.168.18.36
+  remote_pi_port: 8081
+  remote_pi_user: pi
+safety:
+  wheel_watchdog_ms: 450
+  actuator_watchdog_ms: 600
+  require_manual_arm: true
+  driver_profile: L298N_OR_PWM_2DIR

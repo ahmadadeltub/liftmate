@@ -1,0 +1,1069 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_screen"
+    android:orientation="vertical">
+
+    <!-- Pinned Top Command Bar -->
+    <LinearLayout
+        android:id="@+id/topHeaderBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="6dp">
+
+        <TextView
+            android:id="@+id/tvBrandBadge"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@drawable/bg_badge_lm"
+            android:gravity="center"
+            android:text="LM"
+            android:textColor="#04101E"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/btnConnectionHeader"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvBrandTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:text="LiftMate"
+                android:textColor="@color/lm_text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvTopStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:text="@string/connecting_auto"
+                android:textColor="@color/lm_amber"
+                android:textSize="10.5sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnThemeToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/bg_pill_button"
+            android:minWidth="0dp"
+            android:paddingStart="9dp"
+            android:paddingEnd="9dp"
+            android:singleLine="true"
+            android:text="☀"
+            android:textAllCaps="false"
+            android:textColor="@color/lm_text_primary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnResetAll"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/bg_pill_button"
+            android:minWidth="0dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:singleLine="true"
+            android:text="RESET"
+            android:textColor="@color/lm_text_primary"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnStopAll"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:background="@drawable/bg_stop_button"
+            android:minWidth="0dp"
+            android:paddingStart="11dp"
+            android:paddingEnd="11dp"
+            android:singleLine="true"
+            android:text="STOP ALL"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Workspace View Switcher (Fits Any Screen!) -->
+    <LinearLayout
+        android:id="@+id/workspaceTabsBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="6dp">
+
+        <Button
+            android:id="@+id/tabAllConsole"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_pill_active_cyan"
+            android:ellipsize="end"
+            android:minWidth="0dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:singleLine="true"
+            android:text="All Console"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="11.5sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/tabFitCockpit"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_pill_button"
+            android:ellipsize="end"
+            android:minWidth="0dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:singleLine="true"
+            android:text="Fit Cockpit"
+            android:textAllCaps="false"
+            android:textColor="@color/lm_text_secondary"
+            android:textSize="11.5sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/tabFullMap"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_pill_button"
+            android:ellipsize="end"
+            android:minWidth="0dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:singleLine="true"
+            android:text="Live Map"
+            android:textAllCaps="false"
+            android:textColor="@color/lm_text_secondary"
+            android:textSize="11.5sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Scrollable Console Content -->
+    <ScrollView
+        android:id="@+id/mainScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="12dp">
+
+        <LinearLayout
+            android:id="@+id/consoleContentLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Auto-Connect / Wi-Fi Helper Banner -->
+            <LinearLayout
+                android:id="@+id/bannerConnectionAlert"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_glass_card"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="9dp">
+
+                <TextView
+                    android:id="@+id/tvConnectionBannerMsg"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:text="Searching for LiftMate (10.42.0.1)… Connect Wi-Fi to SSID: LiftMate"
+                    android:textColor="#FCD34D"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnOpenWifi"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_pill_button"
+                    android:minWidth="0dp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:singleLine="true"
+                    android:text="@string/wifi_settings"
+                    android:textAllCaps="false"
+                    android:textColor="@color/lm_cyan"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Autonomous Obstacle Avoidance vs Manual Mode Card -->
+            <LinearLayout
+                android:id="@+id/cardAutonomous"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_auto_card_off"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvAutoHeaderLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ROBOT DRIVE MODE"
+                            android:textColor="@color/lm_text_secondary"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvAutoTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:singleLine="true"
+                            android:text="MANUAL CONTROL"
+                            android:textColor="@color/lm_text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnToggleAutonomous"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:background="@drawable/bg_pill_button"
+                        android:minWidth="0dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:singleLine="true"
+                        android:text="ACTIVATE AUTO"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvAutoReason"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:text="Tap Activate Auto for obstacle-avoiding autonomous driving"
+                    android:textColor="@color/lm_text_secondary"
+                    android:textSize="10.5sp" />
+
+                <LinearLayout
+                    android:id="@+id/rowAutoSpeed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvAutoSpeedLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:text="Auto:"
+                        android:textColor="@color/lm_text_secondary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnAutoSlow"
+                        android:layout_width="0dp"
+                        android:layout_height="28dp"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="Slow 70"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_text_secondary"
+                        android:textSize="10.5sp" />
+
+                    <Button
+                        android:id="@+id/btnAutoCruise"
+                        android:layout_width="0dp"
+                        android:layout_height="28dp"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_active_cyan"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="Cruise 90"
+                        android:textAllCaps="false"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnAutoFast"
+                        android:layout_width="0dp"
+                        android:layout_height="28dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="Fast 110"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_text_secondary"
+                        android:textSize="10.5sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Live AI Camera Card -->
+            <LinearLayout
+                android:id="@+id/cardCamera"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_glass_card"
+                android:orientation="vertical"
+                android:padding="9dp">
+
+                <FrameLayout
+                    android:id="@+id/cameraFrameWrap"
+                    android:layout_width="match_parent"
+                    android:layout_height="190dp"
+                    android:background="#060B16">
+
+                    <com.liftmate.control.views.CameraOverlayView
+                        android:id="@+id/cameraOverlayView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                    <TextView
+                        android:id="@+id/tvCameraWarning"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|center_horizontal"
+                        android:layout_marginBottom="6dp"
+                        android:background="#CCF59E0B"
+                        android:paddingStart="10dp"
+                        android:paddingTop="3dp"
+                        android:paddingEnd="10dp"
+                        android:paddingBottom="3dp"
+                        android:textColor="#0F172A"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </FrameLayout>
+
+                <!-- 2 Clean 3-Button Rows so Every Button Fits Comfortably -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnAiToggle"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_active_cyan"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="AI ON"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnAiDetect"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_active_cyan"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="DETECT"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnAiSafety"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="SAFETY"
+                        android:textColor="@color/lm_text_secondary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowCamTools"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnMuteSound"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="🔊 SOUND ON"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_cyan"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnCamFitToggle"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="Fit Frame"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnFullCamera"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="⛶ Full Cam"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Live Robot Map Card (Interactive Offline Map + Repair Pins) -->
+            <LinearLayout
+                android:id="@+id/cardMap"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_glass_card"
+                android:orientation="vertical"
+                android:padding="9dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvMapHeader"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="LIVE ROBOT MAP (OFFLINE)"
+                        android:textColor="@color/lm_text_secondary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvMapStatusChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Waiting AP"
+                        android:textColor="@color/lm_cyan"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <FrameLayout
+                    android:id="@+id/mapFrameWrap"
+                    android:layout_width="match_parent"
+                    android:layout_height="225dp"
+                    android:background="#070D1B">
+
+                    <com.liftmate.control.views.TouchableMapWebView
+                        android:id="@+id/mapWebView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                    <LinearLayout
+                        android:id="@+id/mapOfflineOverlay"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="#E6080E1E"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/tvMapOverlayMsg"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="Live Offline Map loads automatically once connected to LiftMate (10.42.0.1)"
+                            android:textColor="#94A3B8"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnMapFullscreen"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="Full Map"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnMapResetGyro"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="Reset Gyro"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnMapLocateMe"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="Locate Me"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnMapMoveRobot"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="🤖 Move"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnMapPinHere"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="🔧 Pin Car"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnMapTapPin"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="📍 Tap Pin"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnMapCarRepaired"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_marginEnd="5dp"
+                        android:layout_weight="1.35"
+                        android:background="@drawable/bg_pill_active_green"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="✅ Car Repaired"
+                        android:textAllCaps="false"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnMapClearPins"
+                        android:layout_width="0dp"
+                        android:layout_height="31dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="🗑 Clear All"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Mecanum 360 Wheels + Fit Robot Status Card -->
+            <LinearLayout
+                android:id="@+id/cardWheels"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_glass_card"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvWheelsHeader"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="WHEELS — 360° MECANUM"
+                        android:textColor="@color/lm_text_secondary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvWheelSpeed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Speed 55% (155 PWM)"
+                        android:textColor="@color/lm_cyan"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Proportionally weighted row: ALWAYS fits 320dp+ without clipping! -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnRotateLeft"
+                        android:layout_width="0dp"
+                        android:layout_height="76dp"
+                        android:layout_weight="0.22"
+                        android:background="@drawable/bg_pill_button"
+                        android:minWidth="0dp"
+                        android:padding="4dp"
+                        android:text="↺\nLEFT"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <com.liftmate.control.views.OmniJoystickView
+                        android:id="@+id/omniJoystick"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="0.56" />
+
+                    <Button
+                        android:id="@+id/btnRotateRight"
+                        android:layout_width="0dp"
+                        android:layout_height="76dp"
+                        android:layout_weight="0.22"
+                        android:background="@drawable/bg_pill_button"
+                        android:minWidth="0dp"
+                        android:padding="4dp"
+                        android:text="↻\nRIGHT"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowWheelSpeedBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvSpeedLow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="LOW"
+                        android:textColor="@color/lm_text_muted"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
+
+                    <SeekBar
+                        android:id="@+id/seekWheelSpeed"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:max="150"
+                        android:progress="105" />
+
+                    <TextView
+                        android:id="@+id/tvSpeedMax"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="MAX"
+                        android:textColor="@color/lm_text_muted"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Actuators (Jack / Holder) & Camera Servo Card -->
+            <LinearLayout
+                android:id="@+id/cardActuators"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_glass_card"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvActHeader"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="LINEAR JACKS &amp; CAMERA TILT"
+                        android:textColor="@color/lm_text_secondary"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvServoReadout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cam 68°"
+                        android:textColor="#EC4899"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvLblJack"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:singleLine="true"
+                            android:text="Jack"
+                            android:textColor="@color/lm_text_primary"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <com.liftmate.control.views.VerticalFaderView
+                            android:id="@+id/faderJack"
+                            android:layout_width="match_parent"
+                            android:layout_height="145dp"
+                            android:layout_marginTop="3dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvLblHolder"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:singleLine="true"
+                            android:text="Holder"
+                            android:textColor="@color/lm_text_primary"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <com.liftmate.control.views.VerticalFaderView
+                            android:id="@+id/faderHolder"
+                            android:layout_width="match_parent"
+                            android:layout_height="145dp"
+                            android:layout_marginTop="3dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvLblBoth"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:singleLine="true"
+                            android:text="Jack+Hold"
+                            android:textColor="@color/lm_text_primary"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <com.liftmate.control.views.VerticalFaderView
+                            android:id="@+id/faderBoth"
+                            android:layout_width="match_parent"
+                            android:layout_height="145dp"
+                            android:layout_marginTop="3dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvLblCamera"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:singleLine="true"
+                            android:text="Camera"
+                            android:textColor="@color/lm_text_primary"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <com.liftmate.control.views.VerticalFaderView
+                            android:id="@+id/faderServo"
+                            android:layout_width="match_parent"
+                            android:layout_height="145dp"
+                            android:layout_marginTop="3dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Live Robot Chassis & Telemetry Card -->
+            <LinearLayout
+                android:id="@+id/cardTelemetry"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_glass_card"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/tvTelHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="LIVE ROBOT VIEW &amp; TELEMETRY"
+                    android:textColor="@color/lm_text_secondary"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.liftmate.control.views.RobotChassisView
+                        android:id="@+id/robotChassisView"
+                        android:layout_width="112dp"
+                        android:layout_height="104dp" />
+
+                    <TextView
+                        android:id="@+id/tvTelemetryDetails"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:fontFamily="monospace"
+                        android:lineSpacingExtra="2dp"
+                        android:text="Port: --\nSafety: --\nHeading: --°\nTilt: --°"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="10.5sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnConfigureHost"
+                        android:layout_width="0dp"
+                        android:layout_height="34dp"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="⚙ Robot IP / Auto"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_text_primary"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/btnOpenSpareWeb"
+                        android:layout_width="0dp"
+                        android:layout_height="34dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_pill_button"
+                        android:ellipsize="end"
+                        android:minWidth="0dp"
+                        android:singleLine="true"
+                        android:text="🌐 Spare Web UI"
+                        android:textAllCaps="false"
+                        android:textColor="@color/lm_cyan"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
