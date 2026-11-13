@@ -272,12 +272,12 @@ Built in Kotlin (`com.liftmate.control`, `minSdk 24`, `targetSdk 35`, packaged a
 1. **Zero-Config OS Socket Binding (`WifiNetworkBinder` + `HostCandidatePlanner`):** Android routinely drops HTTP requests to captive/offline Wi-Fi hotspots when cellular 4G/5G has internet access. Upon launch and resume, the app automatically locates/requests the `LiftMate` Wi-Fi network, explicitly binds the application process socket to the Wi-Fi transport via Android `ConnectivityManager`, and probes candidate endpoints in parallel (`http://10.42.0.1`, `http://10.42.0.1:8000`, and LAN fallback `http://192.168.18.36:8000`) for plug-and-play connection.
 2. **Dark & Light Themes (`RobotTheme.kt` / `ThemePalettes`):** Instant one-tap switching between high-contrast outdoor `LIGHT` visibility and glare-free night/garage `DARK` cockpit themes.
 3. **Responsive Any-Screen Workspace Modes:**
-   * **`All Console`:** Unified dashboard exposing camera AI HUD, compact live offline map, Mecanum chassis feedback, `360°` joystick, `4` faders, autonomous switch, and E-STOP.
-   * **`Fit Cockpit`:** Dynamically scaled compact dual-thumb cockpit fitting all critical controls cleanly onto any phone screen without scrolling.
+   * **`All Console`:** Unified dashboard exposing the live camera AI HUD docked side-by-side with the **Camera Tilt Servo slider (`6°–130°`)**, interactive offline map, Mecanum chassis feedback, `360°` joystick, `3` actuator faders (`Jack`, `Holder`, `Jack & Holder`), autonomous switch, and E-STOP.
+   * **`Fit Cockpit`:** Dynamically scaled compact single-viewport cockpit fitting live camera + beside servo tilt dock, autonomous toggle, and `360°` joystick cleanly onto any phone screen without scrolling.
    * **`Live Map`:** Expanded embedded `TouchableMapWebView` displaying `/mobile-map` with touch-interception protection (`requestDisallowInterceptTouchEvent`) so pinch/pan gestures never fight outer Android scrolls.
 4. **Custom Hardware Control Views:**
    * `OmniJoystickView.kt`: Proportional `360°` circular omni-stick transmitting directional $(v_y, v_x, \omega)$ vectors.
-   * `VerticalFaderView.kt`: Spring-return hold-to-run vertical controls for **Jack** (Upper), **Holder** (Lower), **Jack & Holder** (Synchronized Dual Group), plus camera pitch tilt slider.
+   * `VerticalFaderView.kt`: Spring-return hold-to-run vertical controls for **Jack** (Upper), **Holder** (Lower), and **Jack & Holder** (Synchronized Dual Group), plus sticky vertical **Servo (`6°–130°`) tilt sliders docked directly beside both the inline and fullscreen camera feeds** so operators watch live video while tilting up/down.
    * `RobotChassisView.kt`: Real-time four-wheel vector & polarity visualizer.
    * `CameraOverlayView.kt`: Live MJPEG stream compositor drawing `LEFT/CENTER/RIGHT` AI hazard bounding boxes and state badges.
 
@@ -349,7 +349,7 @@ Every safety guard, communication parser, kinematic mixer, vision heuristic, aut
 
 | Suite / Tool | Scope Covered | Verified Outcome |
 | :--- | :--- | :--- |
-| **Python Backend `pytest` Suite** (`LiftMate-Control-Center/tests/`) | `test_protocol.py`, `test_serial.py`, `test_safety.py`, `test_motors.py`, `test_actuators.py`, `test_ai_vision.py`, `test_autonomous.py`, `test_simple_control.py` | **26 / 26 tests passed (`8.35 s`)** |
+| **Python Backend `pytest` Suite** (`LiftMate-Control-Center/tests/`) | `test_protocol.py`, `test_serial.py`, `test_safety.py`, `test_motors.py`, `test_actuators.py`, `test_ai_vision.py`, `test_autonomous.py`, `test_simple_control.py` | **26 / 26 tests passed (`8.43 s`)** |
 | **Android Gradle Unit Tests** (`LiftMate-Android/app/src/test/`) | `RobotModelsTest`: `controlPayloadsClampSafetyLimitsCleanly`, `themePalettesExposeDistinctDarkAndLightModes`, `hostDiscoveryPrioritizesLastKnownCustomAndDefaultAp` | **3 / 3 tests passed (`0` failures, `0` skipped)** |
 | **Android APK Packaging** (`LiftMate-Control-Center/android/LiftMate-Control.apk`) | Gradle Android build & signed APK binary artifact | **`2.2 MB` APK verified (`BUILD SUCCESSFUL`)** |
 

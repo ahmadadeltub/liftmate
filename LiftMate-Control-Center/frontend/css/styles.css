@@ -612,8 +612,15 @@ input:focus {
 }
 
 /* ==================== CAMERA VIEWPORT ==================== */
+.camera-monitor-row {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+
 .camera-viewport {
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 320px;
   max-height: 480px;
   background: #040811;
@@ -624,6 +631,41 @@ input:focus {
   justify-content: center;
   position: relative;
   overflow: hidden;
+}
+
+.cam-beside-servo {
+  flex: 0 0 64px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 6px;
+  gap: 6px;
+}
+
+.cam-servo-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.cam-servo-val {
+  font-size: 12px;
+  font-weight: 800;
+  color: #ec4899;
+}
+
+.cam-servo-vertical {
+  flex: 1 1 auto;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 28px;
+  min-height: 200px;
+  cursor: ns-resize;
+  accent-color: #ec4899;
 }
 
 .camera-viewport img {

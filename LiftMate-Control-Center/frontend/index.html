@@ -528,15 +528,24 @@
               <span>Live Camera Feed</span>
               <span id="camFeedBadge" class="pill">STOPPED</span>
             </div>
-            <div class="camera-viewport">
-              <img id="cameraStreamImg" alt="Live Camera Stream" />
-              <div id="cameraPlaceholder" class="camera-placeholder">
-                <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;" id="camErrorTitle">
-                  Camera Stream Inactive
+            <div class="camera-monitor-row">
+              <div class="camera-viewport">
+                <img id="cameraStreamImg" alt="Live Camera Stream" />
+                <div id="cameraPlaceholder" class="camera-placeholder">
+                  <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;" id="camErrorTitle">
+                    Camera Stream Inactive
+                  </div>
+                  <div style="font-size:12.5px;color:var(--text-secondary);" id="camErrorDetail">
+                    Select a camera source and click START CAMERA.
+                  </div>
                 </div>
-                <div style="font-size:12.5px;color:var(--text-secondary);" id="camErrorDetail">
-                  Select a camera source and click START CAMERA.
-                </div>
+              </div>
+              <div class="cam-beside-servo" title="Adjust Camera Tilt Servo While Viewing Feed">
+                <span class="cam-servo-title">SERVO</span>
+                <strong id="camTabServoVal" class="cam-servo-val">68°</strong>
+                <input type="range" id="camTabServoSlider" class="cam-servo-vertical" min="6" max="130" value="68"
+                       oninput="previewCamTabServo(this.value)"
+                       onchange="setCameraViewServoAngle(this.value)" />
               </div>
             </div>
           </div>

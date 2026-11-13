@@ -105,7 +105,9 @@ class MainActivity : ComponentActivity() {
     private lateinit var btnAutoFast: Button
 
     private lateinit var cardCamera: LinearLayout
+    private lateinit var cameraStageRow: LinearLayout
     private lateinit var cameraFrameWrap: FrameLayout
+    private lateinit var cameraServoDock: LinearLayout
     private lateinit var cameraOverlayView: CameraOverlayView
     private lateinit var tvCameraWarning: TextView
     private lateinit var rowCamTools: LinearLayout
@@ -192,6 +194,8 @@ class MainActivity : ComponentActivity() {
     private var fullscreenDialog: Dialog? = null
     private var fullscreenCamView: CameraOverlayView? = null
     private var fullscreenAutoBtn: Button? = null
+    private var fullscreenServoFader: VerticalFaderView? = null
+    private var fullscreenServoReadout: TextView? = null
 
     private val keepaliveRunnable = object : Runnable {
         override fun run() {
@@ -273,7 +277,9 @@ class MainActivity : ComponentActivity() {
         btnAutoFast = findViewById(R.id.btnAutoFast)
 
         cardCamera = findViewById(R.id.cardCamera)
+        cameraStageRow = findViewById(R.id.cameraStageRow)
         cameraFrameWrap = findViewById(R.id.cameraFrameWrap)
+        cameraServoDock = findViewById(R.id.cameraServoDock)
         cameraOverlayView = findViewById(R.id.cameraOverlayView)
         tvCameraWarning = findViewById(R.id.tvCameraWarning)
         rowCamTools = findViewById(R.id.rowCamTools)
@@ -334,7 +340,7 @@ class MainActivity : ComponentActivity() {
         faderServo.accentStartHex = "#F472B6"
         faderServo.accentEndHex = "#8B5CF6"
         faderServo.setStickyFraction((servoAngleDeg - 6) / 124f)
-        tvServoReadout.text = "Cam ${servoAngleDeg}°"
+        tvServoReadout.text = "${servoAngleDeg}°"
     }
 
     private fun setupRoundedFrameClips() {
@@ -435,6 +441,7 @@ class MainActivity : ComponentActivity() {
         btnResetAll.setOnClickListener {
             vibrateShort(25L)
             stopLocalMotionState()
+            syncServoUi(6)
             postSimpleControl(ControlPayloadFormatter.buildSimpleModeJson("RESET_ALL"))
         }
 
@@ -570,16 +577,38 @@ class MainActivity : ComponentActivity() {
         }
         faderServo.onValueChanged = { fraction, active ->
             val angle = (6 + fraction * 124f).roundToInt().coerceIn(6, 130)
-            servoAngleDeg = angle
-            tvServoReadout.text = "Cam ${angle}°"
-            robotChassisView.updateState(
-                lastTelemetry.wheelPwms,
-                lastTelemetry.aiVision.regions,
-                servoAngleDeg,
-                lastTelemetry.autonomous.enabled,
-            )
-            dispatchServo(angle, force = !active)
+            onServoSliderMoved(angle, active, syncInline = false, syncFullscreen = true)
         }
+    }
+
+    private fun syncServoUi(angle: Int, syncInline: Boolean = true, syncFullscreen: Boolean = true) {
+        val clamped = angle.coerceIn(6, 130)
+        servoAngleDeg = clamped
+        val frac = (clamped - 6) / 124f
+        tvServoReadout.text = "${clamped}°"
+        if (syncInline) {
+            faderServo.setStickyFraction(frac)
+        }
+        fullscreenServoReadout?.text = "${clamped}°"
+        if (syncFullscreen) {
+            fullscreenServoFader?.setStickyFraction(frac)
+        }
+        robotChassisView.updateState(
+            lastTelemetry.wheelPwms,
+            lastTelemetry.aiVision.regions,
+            servoAngleDeg,
+            lastTelemetry.autonomous.enabled,
+        )
+    }
+
+    private fun onServoSliderMoved(
+        angle: Int,
+        active: Boolean,
+        syncInline: Boolean,
+        syncFullscreen: Boolean,
+    ) {
+        syncServoUi(angle, syncInline = syncInline, syncFullscreen = syncFullscreen)
+        dispatchServo(angle.coerceIn(6, 130), force = !active)
     }
 
     private fun applyWorkspaceMode(mode: WorkspaceMode) {
@@ -662,9 +691,9 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        cameraFrameWrap.layoutParams = cameraFrameWrap.layoutParams.apply { height = camHeightPx }
+        cameraStageRow.layoutParams = cameraStageRow.layoutParams.apply { height = camHeightPx }
         mapFrameWrap.layoutParams = mapFrameWrap.layoutParams.apply { height = mapHeightPx }
-        for (fader in listOf(faderJack, faderHolder, faderBoth, faderServo)) {
+        for (fader in listOf(faderJack, faderHolder, faderBoth)) {
             fader.layoutParams = fader.layoutParams.apply { height = faderHeightPx }
         }
         btnRotateLeft.layoutParams = btnRotateLeft.layoutParams.apply { height = rotateBtnHeightPx }
@@ -692,10 +721,11 @@ class MainActivity : ComponentActivity() {
         for (c in cards) {
             c.background = palette.cardDrawable()
         }
+        cameraServoDock.background = palette.cardDrawable(cornerRadiusPx = dpToPx(14).toFloat(), strokePx = 2)
 
         val secondaryLabels = listOf(
             tvAutoHeaderLabel, tvAutoSpeedLabel, tvMapHeader,
-            tvWheelsHeader, tvActHeader, tvTelHeader,
+            tvWheelsHeader, tvActHeader, tvTelHeader, tvLblCamera,
         )
         for (tv in secondaryLabels) {
             tv.setTextColor(palette.textSecondary)
@@ -704,10 +734,11 @@ class MainActivity : ComponentActivity() {
         for (tv in mutedLabels) {
             tv.setTextColor(palette.textMuted)
         }
-        val primaryLabels = listOf(tvLblJack, tvLblHolder, tvLblBoth, tvLblCamera, tvTelemetryDetails)
+        val primaryLabels = listOf(tvLblJack, tvLblHolder, tvLblBoth, tvTelemetryDetails)
         for (tv in primaryLabels) {
             tv.setTextColor(palette.textPrimary)
         }
+        tvServoReadout.setTextColor(Color.parseColor(if (isLight) "#DB2777" else "#EC4899"))
         tvWheelSpeed.setTextColor(palette.cyan)
         tvMapStatusChip.setTextColor(palette.cyan)
 
@@ -1294,14 +1325,70 @@ class MainActivity : ComponentActivity() {
         }
         root.addView(controlsBar, barParams)
 
+        // Docked Camera Tilt Servo slider right beside fullscreen camera feed
+        val fsServoDock = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER_HORIZONTAL
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = dpToPx(16).toFloat()
+                setColor(Color.parseColor("#BF0B1324"))
+                setStroke(2, Color.parseColor("#66F472B6"))
+            }
+            setPadding(dpToPx(4), dpToPx(8), dpToPx(4), dpToPx(8))
+        }
+        val fsServoTitle = TextView(this).apply {
+            text = "SERVO"
+            setTextColor(Color.parseColor("#CBD5E1"))
+            textSize = 9.5f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }
+        val fsServoVal = TextView(this).apply {
+            text = "${servoAngleDeg}°"
+            setTextColor(Color.parseColor("#F472B6"))
+            textSize = 11.5f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }
+        val fsServo = VerticalFaderView(this).apply {
+            isSticky = true
+            accentStartHex = "#F472B6"
+            accentEndHex = "#8B5CF6"
+            setStickyFraction((servoAngleDeg - 6) / 124f)
+            setLightTheme(false)
+            onValueChanged = { frac, active ->
+                val ang = (6 + frac * 124f).roundToInt().coerceIn(6, 130)
+                onServoSliderMoved(ang, active, syncInline = true, syncFullscreen = false)
+            }
+        }
+        fsServoDock.addView(fsServoTitle)
+        fsServoDock.addView(fsServoVal)
+        fsServoDock.addView(
+            fsServo,
+            LinearLayout.LayoutParams(dpToPx(50), 0, 1f).apply {
+                topMargin = dpToPx(4)
+            },
+        )
+        val dockParams = FrameLayout.LayoutParams(
+            dpToPx(60),
+            dpToPx(240),
+        ).apply {
+            gravity = android.view.Gravity.END or android.view.Gravity.CENTER_VERTICAL
+            marginEnd = dpToPx(12)
+        }
+        root.addView(fsServoDock, dockParams)
+
         dialog.setContentView(root)
         dialog.setOnDismissListener {
             fullscreenCamView = null
             fullscreenAutoBtn = null
+            fullscreenServoFader = null
+            fullscreenServoReadout = null
             fullscreenDialog = null
         }
         fullscreenCamView = camView
         fullscreenAutoBtn = autoBtn
+        fullscreenServoFader = fsServo
+        fullscreenServoReadout = fsServoVal
         fullscreenDialog = dialog
         camView.updateTelemetry(lastTelemetry.aiVision, lastTelemetry.autonomous)
         dialog.show()

@@ -374,33 +374,84 @@
                 android:orientation="vertical"
                 android:padding="9dp">
 
-                <FrameLayout
-                    android:id="@+id/cameraFrameWrap"
+                <LinearLayout
+                    android:id="@+id/cameraStageRow"
                     android:layout_width="match_parent"
                     android:layout_height="190dp"
-                    android:background="#060B16">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                    <com.liftmate.control.views.CameraOverlayView
-                        android:id="@+id/cameraOverlayView"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
+                    <FrameLayout
+                        android:id="@+id/cameraFrameWrap"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="#060B16">
 
-                    <TextView
-                        android:id="@+id/tvCameraWarning"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom|center_horizontal"
-                        android:layout_marginBottom="6dp"
-                        android:background="#CCF59E0B"
-                        android:paddingStart="10dp"
-                        android:paddingTop="3dp"
-                        android:paddingEnd="10dp"
-                        android:paddingBottom="3dp"
-                        android:textColor="#0F172A"
-                        android:textSize="10.5sp"
-                        android:textStyle="bold"
-                        android:visibility="gone" />
-                </FrameLayout>
+                        <com.liftmate.control.views.CameraOverlayView
+                            android:id="@+id/cameraOverlayView"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+                        <TextView
+                            android:id="@+id/tvCameraWarning"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom|center_horizontal"
+                            android:layout_marginBottom="6dp"
+                            android:background="#CCF59E0B"
+                            android:paddingStart="10dp"
+                            android:paddingTop="3dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="3dp"
+                            android:textColor="#0F172A"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+                    </FrameLayout>
+
+                    <!-- Camera Tilt Servo Slider Docked Directly Beside Camera Feed -->
+                    <LinearLayout
+                        android:id="@+id/cameraServoDock"
+                        android:layout_width="58dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_glass_card"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical"
+                        android:paddingStart="2dp"
+                        android:paddingTop="5dp"
+                        android:paddingEnd="2dp"
+                        android:paddingBottom="4dp">
+
+                        <TextView
+                            android:id="@+id/tvLblCamera"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:singleLine="true"
+                            android:text="SERVO"
+                            android:textColor="@color/lm_text_secondary"
+                            android:textSize="9sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvServoReadout"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:singleLine="true"
+                            android:text="68°"
+                            android:textColor="#EC4899"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <com.liftmate.control.views.VerticalFaderView
+                            android:id="@+id/faderServo"
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_marginTop="2dp"
+                            android:layout_weight="1" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <!-- 2 Clean 3-Button Rows so Every Button Fits Comfortably -->
                 <LinearLayout
@@ -841,7 +892,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Actuators (Jack / Holder) & Camera Servo Card -->
+            <!-- Actuators (Jack / Holder / Jack & Holder) Card -->
             <LinearLayout
                 android:id="@+id/cardActuators"
                 android:layout_width="match_parent"
@@ -862,17 +913,8 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="LINEAR JACKS &amp; CAMERA TILT"
+                        android:text="LINEAR JACKS (HOLD TO MOVE)"
                         android:textColor="@color/lm_text_secondary"
-                        android:textSize="10.5sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvServoReadout"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Cam 68°"
-                        android:textColor="#EC4899"
                         android:textSize="10.5sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -943,37 +985,13 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:singleLine="true"
-                            android:text="Jack+Hold"
+                            android:text="Jack &amp; Holder"
                             android:textColor="@color/lm_text_primary"
                             android:textSize="11sp"
                             android:textStyle="bold" />
 
                         <com.liftmate.control.views.VerticalFaderView
                             android:id="@+id/faderBoth"
-                            android:layout_width="match_parent"
-                            android:layout_height="145dp"
-                            android:layout_marginTop="3dp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center_horizontal"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvLblCamera"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:singleLine="true"
-                            android:text="Camera"
-                            android:textColor="@color/lm_text_primary"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-
-                        <com.liftmate.control.views.VerticalFaderView
-                            android:id="@+id/faderServo"
                             android:layout_width="match_parent"
                             android:layout_height="145dp"
                             android:layout_marginTop="3dp" />

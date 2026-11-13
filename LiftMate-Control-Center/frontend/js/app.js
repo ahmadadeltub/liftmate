@@ -483,12 +483,31 @@ async function toggleServoEnable(enabled) {
   await apiPost("/api/servo/enable", { enabled });
 }
 
-async function setServoAngle(angle) {
+function syncServoDom(angle) {
   const slider = document.getElementById("servoAngleSlider");
   const label = document.getElementById("servoSliderVal");
+  const camSlider = document.getElementById("camTabServoSlider");
+  const camLabel = document.getElementById("camTabServoVal");
   if (slider) slider.value = angle;
   if (label) label.textContent = `${angle}°`;
+  if (camSlider) camSlider.value = angle;
+  if (camLabel) camLabel.textContent = `${angle}°`;
+}
+
+async function setServoAngle(angle) {
+  syncServoDom(angle);
   await apiPost("/api/servo/angle", { angle_deg: parseInt(angle, 10) });
+}
+
+function previewCamTabServo(angle) {
+  const camLabel = document.getElementById("camTabServoVal");
+  if (camLabel) camLabel.textContent = `${angle}°`;
+}
+
+async function setCameraViewServoAngle(angle) {
+  const deg = Math.max(6, Math.min(130, parseInt(angle, 10) || 68));
+  syncServoDom(deg);
+  await apiPost("/api/simple/control", { mode: "SERVO", servo_angle: deg });
 }
 
 async function centerServo() {
@@ -748,6 +767,12 @@ function renderState(state) {
   document.getElementById("servoStateBadge").className = servo.enabled ? "pill green" : "pill amber";
   document.getElementById("servoCmdAngle").textContent = `${servo.commanded_angle}°`;
   document.getElementById("servoWindowText").textContent = `${servo.safe_min_deg}° – ${servo.safe_max_deg}°`;
+  const camServoValEl = document.getElementById("camTabServoVal");
+  const camServoSliderEl = document.getElementById("camTabServoSlider");
+  if (camServoValEl) camServoValEl.textContent = `${servo.commanded_angle}°`;
+  if (camServoSliderEl && document.activeElement !== camServoSliderEl) {
+    camServoSliderEl.value = servo.commanded_angle;
+  }
 
   // 7. IMU
   document.getElementById("imuHeadingVal").textContent = imu.connected ? `${imu.heading}°` : "OFFLINE";
