@@ -24,6 +24,14 @@
 
 ---
 
+## Live Mobile App, AI Vision & Engineering UI Screenshots
+
+| Android Mobile App — AI Detection HUD & Beside-Camera Servo | Android `Fit Cockpit` — Light Mode & Autonomous Guard |
+| :---: | :---: |
+| <img src="docs/screenshots/android_all_console_dark.png" alt="Android App All Console Dark with AI Detections and Servo" width="85%"/> | <img src="docs/screenshots/android_fit_cockpit_light.png" alt="Android App Fit Cockpit Light Theme" width="85%"/> |
+| **Autonomous Obstacle Avoidance (`SCAN_ROTATE`)** | **Spare Web Console (`http://10.42.0.1/`) & Offline Map** |
+| <img src="docs/screenshots/android_autonomous_active.png" alt="Android App Autonomous Mode Engaged" width="85%"/> | <img src="docs/screenshots/web_simple_compact.png" alt="Web Control Center with AI Detections and Car Pin Map" width="90%"/> |
+
 ## Visual Engineering Overview
 
 | Electrical Circuitry & Pinout | Autonomous & Safety Flowchart |
@@ -32,7 +40,7 @@
 | **Mecanum Kinematics** | **Android App & Multi-Mode UI** |
 | <img src="docs/figures/fig4_mecanum_kinematics.png" alt="Mecanum Kinematics Model" width="100%"/> | <img src="docs/figures/fig6_mobile_app_workflow.png" alt="Android Mobile App Architecture" width="100%"/> |
 
-*(Also see [Figure 5: Offline Dual-Model AI Vision Pipeline](docs/figures/fig5_ai_vision_pipeline.png) inside the [Scientific Research Report](docs/LiftMate_Scientific_Research_Report.md).)*
+*(Also see [Figure 5: Offline Dual-Model AI Vision Pipeline](docs/figures/fig5_ai_vision_pipeline.png) and 10 full UI captures inside the [Scientific Research Report](docs/LiftMate_Scientific_Research_Report.md).)*
 
 ---
 
@@ -65,7 +73,8 @@ robotcar/
 ├── README.md                                  # Project overview & operator quick start
 ├── docs/
 │   ├── LiftMate_Scientific_Research_Report.md # Full IEEE-style scientific paper & field manual
-│   └── figures/                               # 6 custom 300 DPI technical diagrams
+│   ├── figures/                               # 6 custom 300 DPI technical diagrams
+│   └── screenshots/                           # 10 real Android APK, AI Vision & Web UI captures
 ├── LiftMate-Control-Center/                   # FastAPI server, firmware, web UI, models & scripts
 │   ├── android/LiftMate-Control.apk           # Pre-built signed Android APK (2.2 MB)
 │   ├── backend/                               # FastAPI controllers + pi_camera_agent.py

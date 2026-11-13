@@ -310,7 +310,7 @@ class RobotApiClient(private val context: Context) {
             if (detArr != null) {
                 for (i in 0 until detArr.length()) {
                     val d = detArr.optJSONObject(i) ?: continue
-                    val bboxArr = d.optJSONArray("bbox_norm") ?: continue
+                    val bboxArr = d.optJSONArray("bbox_norm") ?: d.optJSONArray("bbox") ?: continue
                     if (bboxArr.length() < 4) continue
                     val norm = listOf(
                         bboxArr.optDouble(0, 0.0).toFloat(),
@@ -318,13 +318,23 @@ class RobotApiClient(private val context: Context) {
                         bboxArr.optDouble(2, 0.0).toFloat(),
                         bboxArr.optDouble(3, 0.0).toFloat(),
                     )
+                    val rawLabel = d.optString("label", "")
+                        .ifBlank { d.optString("category", "") }
+                        .ifBlank { d.optString("raw_class", "object") }
+                    val rawConf = d.optDouble("confidence", 0.0)
+                    val confNorm = if (rawConf > 1.0) rawConf / 100.0 else rawConf
+                    val labelLower = rawLabel.lowercase()
+                    val isVehicle = d.optBoolean(
+                        "is_car",
+                        labelLower in setOf("car", "truck", "bus", "vehicle"),
+                    )
                     boxes.add(
                         DetectionBox(
-                            label = d.optString("label", "object"),
-                            confidence = d.optDouble("confidence", 0.0),
+                            label = rawLabel,
+                            confidence = confNorm,
                             bboxNorm = norm,
                             region = d.optString("region", "CENTER"),
-                            isCar = d.optBoolean("is_car", false),
+                            isCar = isVehicle,
                         ),
                     )
                 }

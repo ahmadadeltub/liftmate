@@ -1,19 +1,19 @@
-# LiftMate: An Autonomous-Capable Omnidirectional Electric Vehicle Recovery Robot with Deterministic Safety Interlocks and Offline Edge Intelligence
+# LiftMate: An Autonomous-Capable Omnidirectional Electric Vehicle Recovery Robot with Deterministic Safety Interlocks, Offline AI Vision, and Mobile/Web Control Consoles
 
-**Technical & Scientific Research Report**  
-**Project Repository:** [https://github.com/ahmadadeltub/liftmate](https://github.com/ahmadadeltub/liftmate)  
-**Target Hardware:** Arduino Mega 2560 (`ATmega2560`) · Raspberry Pi 3 · 4× Mecanum Drive · 8× 12 V Linear Actuators · BNO055 9-DOF IMU · Sony IMX219 CSI Camera  
-**Control Clients:** Native Android Application (`com.liftmate.control`, API 24–35) & FastAPI Web Control Center (`http://10.42.0.1`)
+**Comprehensive Technical & Scientific Research Report**  
+**Repository:** [https://github.com/ahmadadeltub/liftmate](https://github.com/ahmadadeltub/liftmate)  
+**Target Hardware:** Arduino Mega 2560 (`ATmega2560`) · Raspberry Pi 3 (`aarch64`) · `4×` Mecanum Drive · `8×` `12 V` Linear Actuators · BNO055 9-DOF IMU · USB/CSI Camera + `D8` Tilt Servo  
+**Software Clients:** Native Kotlin Android Application (`com.liftmate.control`, API `24–35`, `2.2 MB` APK) & Embedded FastAPI Web Control Centers (`/` Simple Console & `/diagnostics` Engineering Panel)
 
 ---
 
 ## Abstract
 
-Roadside vehicle breakdown recovery and low-clearance under-chassis tire servicing traditionally rely on manual hydraulic jacks and heavy internal-combustion tow trucks—exposing human technicians to traffic hazards, crush risks, high carbon emissions, and confined-space maneuverability constraints. **LiftMate** addresses these limitations through a zero-emission, fully offline, four-tier cyber-physical mobile lifting platform. The mechanical chassis pairs four holonomic **Mecanum drive wheels** with two electrically independent arrays of **12 V parallel linear actuators**: a four-unit `30 mm` **Lower Holder** stage that clamps and cradles the vehicle tire/frame, and a four-unit `50 N / 100 mm` **Upper Lifter** stage that elevates the vehicle vertically.
+Roadside vehicle breakdown recovery and low-clearance under-chassis tire servicing traditionally rely on manual hydraulic jacks and heavy internal-combustion tow vehicles—exposing human technicians to live-traffic hazards, crush risks, high greenhouse-gas emissions, and severe maneuverability constraints inside tight parking bays. **LiftMate** addresses these challenges through a zero-emission, completely offline, four-tier cyber-physical mobile lifting platform. The mechanical chassis pairs four holonomic **Mecanum drive wheels** with two electrically distinct arrays of **`12 V` parallel linear actuators**: a four-unit **`30 mm` Lower Holder** group that cradles and clamps the tire/frame, and a four-unit **`50 N / 100 mm` Upper Lifter** group that elevates the vehicle vertically.
 
-Real-time deterministic actuation and watchdog safety reside on an **Arduino Mega 2560** running custom non-blocking `RobotJackSafe.ino` firmware over framed `115200` bps UART telemetry, enforcing sub-second communication watchdogs (`450 ms` drive timeout, `600 ms` hold-to-run jack timeout), strict maximum actuator run windows (`5,000 ms` lower / `10,000 ms` upper), and automatic `15°` chassis tilt tripping via a **BNO055** 9-DOF IMU (`I2C 0x29`). High-level supervision executes on an onboard **Raspberry Pi 3** configured as a standalone air-gapped Wi-Fi Access Point (`LiftMate`, `10.42.0.1/24`), hosting a **FastAPI** control server, an **IMX219** CSI MJPEG streamer, a dual-model CPU computer vision pipeline (**MobileNet-SSD** + **YOLOv4-tiny** via OpenCV DNN), a `10 Hz` closed-loop **autonomous obstacle-avoidance controller**, and an offline **Qatar SQLite MBTiles** geographic navigation engine. Operators control and supervise the platform through either a **native Kotlin Android APK** featuring automatic Wi-Fi network binding, Dark/Light Material themes, responsive screen adaptation, interactive offline maps, and a synthesized `980/1420 Hz` piezo safety alarm, or a browser-based **Web Control Center** spare console. Software verification across automated backend tests and native Android unit tests confirms deterministic protocol framing, safety FSM transitions, kinematic clamping, and autonomous fail-safe interruption prior to field deployment.
+Deterministic safety watchdogs and motor commutation execute on an **Arduino Mega 2560** running custom non-blocking `RobotJackSafe.ino` firmware over delimiter-framed `115200` bps UART telemetry, enforcing sub-second timeouts (`450 ms` drive timeout, `600 ms` hold-to-run jack timeout), strict maximum actuator run caps (`5,000 ms` lower / `10,000 ms` upper), and automatic `15°` chassis tilt tripping via an **`I2C 0x29` BNO055 9-DOF IMU**. High-level autonomy, edge perception, and operator serving execute on an onboard **Raspberry Pi 3** configured as a standalone air-gapped Wi-Fi Access Point (`LiftMate`, `10.42.0.1/24`), hosting a **FastAPI** REST/WebSocket control hub, a dedicated **V4L2 USB/CSI MJPEG camera agent** (`:8081`), an air-gapped dual-model OpenCV CPU DNN pipeline (**`MobileNet-SSD` + `YOLOv4-tiny`**), a **`10 Hz` autonomous obstacle-avoidance controller**, and an offline **Qatar SQLite MBTiles** geographic navigation engine (`qatar_offline.mbtiles` + `liftmate_routes.db`). Operators command the robot either from the **native Kotlin Android mobile app** (`LiftMate-Control.apk`)—featuring automatic Wi-Fi socket binding (`WifiNetworkBinder`), `DARK` & `LIGHT` Material palettes, responsive `All Console` / `Fit Cockpit` / `Live Map` workspaces, beside-camera tilt servo slider (`6°–130°`), and synthesized `980/1420 Hz` piezo safety sirens—or from any web browser at `http://10.42.0.1`. Automated verification (`26/26` Python backend `pytest` cases and `3/3` Android JUnit tests with APK v2 signature verification) and end-to-end Android Emulator + Chromium UI validation confirm deterministic protocol framing, live object-detection telemetry overlays, safety interlocks, and autonomous fail-safe stopping.
 
-**Keywords:** *Vehicle Recovery Robotics, Mecanum Holonomic Kinematics, Deterministic Watchdog Firmware, Offline Computer Vision, Edge Autonomous Obstacle Avoidance, Cyber-Physical Safety Interlocks, Android Hardware Binding.*
+**Keywords:** *Vehicle Recovery Robotics, Mecanum Holonomic Kinematics, Deterministic Watchdog Firmware, Offline Computer Vision, Edge Autonomous Obstacle Avoidance, Cyber-Physical Safety Interlocks, Android AP Binding, Offline GIS.*
 
 ---
 
@@ -21,15 +21,16 @@ Real-time deterministic actuation and watchdog safety reside on an **Arduino Meg
 
 1. [Introduction & Engineering Motivation](#1-introduction--engineering-motivation)
 2. [Multi-Tier Cyber-Physical System Architecture](#2-multi-tier-cyber-physical-system-architecture)
-3. [Electrical Engineering, Circuitry & Power Stage Isolation](#3-electrical-engineering-circuitry--power-stage-isolation)
-4. [Embedded Firmware & Deterministic Safety Interlocks](#4-embedded-firmware--deterministic-safety-interlocks)
+3. [Electrical Circuitry, Power Distribution & Hardware Pinout](#3-electrical-circuitry-power-distribution--hardware-pinout)
+4. [Embedded Firmware (`RobotJackSafe.ino`) & Safety State Machine](#4-embedded-firmware-robotjacksafeino--safety-state-machine)
 5. [Omnidirectional Mecanum Kinematics & Software Calibration](#5-omnidirectional-mecanum-kinematics--software-calibration)
-6. [Offline Computer Vision & Autonomous Obstacle Avoidance](#6-offline-computer-vision--autonomous-obstacle-avoidance)
-7. [Standalone Edge Networking, Offline GIS & Android Application](#7-standalone-edge-networking-offline-gis--android-application)
-8. [Complete Operator Manual: Setup, Connection & Field Use](#8-complete-operator-manual-setup-connection--field-use)
-9. [Software Verification & Observed System Results](#9-software-verification--observed-system-results)
-10. [Engineering Limitations & Future Work](#10-engineering-limitations--future-work)
-11. [Complete Repository Architecture & File Index](#11-complete-repository-architecture--file-index)
+6. [AI Technology: Offline Computer Vision & Autonomous Obstacle Avoidance](#6-ai-technology-offline-computer-vision--autonomous-obstacle-avoidance)
+7. [Android Mobile Application (`LiftMate-Control.apk`) — Live UI Showcase](#7-android-mobile-application-liftmate-controlapk--live-ui-showcase)
+8. [Web Control Centers (`simple.html` & `/diagnostics`) & Offline Qatar GIS](#8-web-control-centers-simplehtml--diagnostics--offline-qatar-gis)
+9. [Standalone Edge Networking, Deployment & Operator Manual](#9-standalone-edge-networking-deployment--operator-manual)
+10. [Automated Testing, AI Benchmarks & Observed Verification Results](#10-automated-testing-ai-benchmarks--observed-verification-results)
+11. [Engineering Limitations & Future Roadmap](#11-engineering-limitations--future-roadmap)
+12. [Complete Repository Architecture & File Index](#12-complete-repository-architecture--file-index)
 
 ---
 
@@ -37,375 +38,366 @@ Real-time deterministic actuation and watchdog safety reside on an **Arduino Meg
 
 ### 1.1 Background & Problem Statement
 
-Disabled vehicles stranded in highway lanes, multi-story parking garages, or congested urban service bays create acute safety and logistical bottlenecks. Conventional vehicle-recovery practices exhibit four technical shortcomings:
+Disabled vehicles stranded on urban arteries, basements, multi-story parking structures, or narrow workshop service bays present acute operational safety and clearance challenges:
 
-1. **Operator Exposure:** Technicians working directly beneath elevated loads with manual scissor or hydraulic jacks face serious pinch and crush hazards, compounded in roadside recovery zones near live traffic.
-2. **Restricted Lateral Alignment:** Non-holonomic wheeled dollies cannot translate orthogonally into tight curb gaps or densely parked bays without repeated forward-reverse steering maneuvers.
-3. **Connectivity Fragility:** Field recovery sites—underground garages, basements, highways, and industrial yards—frequently lack reliable external Wi-Fi routers or cellular backhaul, breaking cloud-dependent IoT robot controllers.
-4. **Fossil Fuel Dependency:** Dispatching heavy diesel recovery trucks for short-range positioning and roadside tire support generates disproportionate greenhouse gas emissions relative to compact electric assistive robotics.
+1. **Human Crush & Roadside Exposure:** Conventional manual scissor and bottle jacks place technicians within millimeters of live traffic and suspended chassis loads without automated tilt cutoffs or remote clearance visibility.
+2. **Non-Holonomic Maneuvering Bottlenecks:** Traditional steered axles or rigid caster dollies cannot slide purely laterally (`vx`) into low-clearance wheel wells when flanked by neighboring parked cars.
+3. **Connectivity Dead Zones:** Underground garages, reinforced concrete workshops, and rural highway shoulders lack external Wi-Fi infrastructure or reliable internet access—rendering cloud-tethered robots inoperable.
+4. **High Emissions for Short-Range Positioning:** Dispatching diesel flatbed tow trucks solely to relocate a stalled vehicle several meters out of an intersection or bay incurs unnecessary carbon emissions and latency.
 
 ### 1.2 Engineering Design Objectives
 
-LiftMate is architected to resolve each failure mode cleanly through four core engineering principles:
+LiftMate is engineered to solve these four limitations simultaneously through four architectural pillars:
 
-* **Zero-Infrastructure Autonomy:** All compute, Wi-Fi routing (`hostapd` + `dnsmasq`), object detection weights (`MobileNet-SSD` + `YOLOv4-tiny`), and regional GIS map tiles (`qatar_offline.mbtiles`) reside onboard the robot with zero external internet dependencies.
-* **Omnidirectional Positioning (`3-DOF` Planar):** Four `45°` Mecanum wheels enable forward/reverse translation (`vy`), pure sideways strafing (`vx`), in-place rotation (`ω`), and diagonal motion to slip cleanly around stranded tires.
-* **Split-Tier Real-Time Safety:** High-latency tasks (vision, mapping, UI, autonomous heuristics) are cleanly isolated on the Raspberry Pi 3, while hard timing watchdogs, PWM clamping, emergency braking, and hardware I2C tilt monitoring execute deterministically on the ATmega2560 microcontroller.
-* **Dual Redundant Human Interfaces:** A custom-built Kotlin Android app (`LiftMate-Control.apk`) auto-binds to the robot's hotspot cleanly without cellular interference, while an embedded FastAPI Web Control Center (`http://10.42.0.1`) serves as an instant zero-install backup from any browser.
+* **Holonomic Under-Chassis Approach (`3-DOF` Planar):** Four `45°`-roller Mecanum wheels produce decoupled longitudinal (`vy`), lateral (`vx`), diagonal, and zero-radius yaw (`ω`) motion around stationary vehicle tires.
+* **Dual-Stage Linear Lifting Geometry:** Four `30 mm` parallel actuators (`lowerJack`) stabilize and clamp around the tire/frame prior to engaging four `50 N / 100 mm` heavy lifting actuators (`upperJack`) under IMU tilt monitoring.
+* **Hard Deterministic Split Between Real-Time MCU & Edge Linux:** An **Arduino Mega 2560** enforces millisecond hardware watchdogs (`450 ms` wheels, `600 ms` jacks), bridge dead-time switching, and AVR `WDT` recovery independently of Linux OS scheduling or Wi-Fi drops.
+* **Zero-Cloud Edge Stack & Dual HMI Clients:** A **Raspberry Pi 3** serves a captive/standalone Wi-Fi AP (`LiftMate`, `10.42.0.1`), local OpenCV DNN models, offline Qatar vector/satellite map tiles, a spare browser UI, and auto-discovered native Android APK connectivity.
 
 ---
 
 ## 2. Multi-Tier Cyber-Physical System Architecture
 
-LiftMate follows a strict **four-tier hierarchical architecture** separating noisy physical power electronics from real-time microcontroller timing loops, Linux edge inference services, and operator interfaces (Figure 1).
+LiftMate partitions actuation, deterministic timing, AI computation, and human supervision across **four loosely coupled cyber-physical tiers** (Figure 1).
 
 ![Figure 1: Four-Tier Cyber-Physical System Architecture of the LiftMate Vehicle Recovery Robot](figures/fig1_system_architecture.png)
 
-### 2.1 Layer Responsibilities
+### 2.1 Four-Tier Functional Decomposition
 
-| Tier | Compute / Hardware Substrate | Primary Responsibilities | Timing / Interface Regime |
+| Tier | Hardware / Software Substrate | Core Responsibilities | Interfaces & Timing Regime |
 | :--- | :--- | :--- | :--- |
-| **Tier 1: Physical Layer** | `4×` Mecanum DC motors, `8×` `12 V` linear actuators (`4` Lower `30 mm`, `4` Upper `50 N 100 mm`), BNO055 IMU, Servo, `12 V` battery + Fuse + NC E-STOP, IMX219 CSI camera | Mechanical locomotion, tire clamping, vertical lifting, inertial orientation feedback, optical video capture, physical bus disconnect | High-current `12 V` switched DC bus; CSI differential video pairs; `I2C` & `PWM` actuator drive |
-| **Tier 2: Real-Time MCU** | **Arduino Mega 2560** (`RobotJackSafe.ino`) | Framed UART command decoding, PWM/DIR H-bridge actuation, hold-to-run & communication watchdogs, hardware `WDT`, non-blocking `I2C` recovery | `115200` bps UART; `10 Hz` IMU stream; `450 ms` / `600 ms` deterministic timeouts |
-| **Tier 3: Edge Compute & AP** | **Raspberry Pi 3** (`systemd` daemon suite) | Standalone Wi-Fi AP (`10.42.0.1`), `FastAPI` REST/WebSocket hub (`:8000`), port-`80` proxy, CSI MJPEG server (`:8081`), CPU DNN vision, `10 Hz` autonomous loop, SQLite MBTiles server | `10 Hz` autonomous loop; `320×240 @ 10 fps` MJPEG; HTTP/REST + WebSockets |
-| **Tier 4: HMI Clients** | **Android App** (`com.liftmate.control`) & **Web UI** (`simple.html` / `index.html` / `mobile_map.html`) | Auto AP discovery & OS socket binding, `360°` omni-joystick, spring-return linear faders, audible `980/1420 Hz` siren, live HUD overlay, offline GIS navigation | Mobile touch UI (`DARK` & `LIGHT` themes); `All Console`, `Fit Cockpit`, `Live Map` |
+| **Tier 1: Physical Hardware** | `4×` Mecanum DC gearmotors, `8×` `12 V` linear actuators (`4× 30 mm` + `4× 100 mm`), BNO055 9-DOF IMU, camera tilt servo (`D8`), USB/CSI camera, `12 V` battery + `15–20 A` fuse + Mushroom NC E-STOP | Planar locomotion, tire clamping, vehicle lifting, pitch/roll/yaw sensing, optical capture, physical bus cut-off | `12 V` switched power bus; H-bridge PWM/DIR; `I2C` (`0x29`); V4L2/CSI video |
+| **Tier 2: Real-Time MCU** | **Arduino Mega 2560** (`RobotJackSafe.ino`) | Framed UART ASCII command parser, PWM/DIR H-bridge commutation with polarity dead-time, wheel/jack watchdogs, AVR hardware `WDT`, `I2C` timeout recovery | `115200` bps USB/Serial; `10 Hz` IMU stream; `450 ms` wheel / `600 ms` jack timeouts |
+| **Tier 3: Edge Server & AI** | **Raspberry Pi 3** (`liftmate-wifi`, `liftmate-control`, `liftmate-camera`, `liftmate-port80`) | Standalone Wi-Fi AP (`10.42.0.1/24`), FastAPI REST + WebSockets (`:8000` & `:80`), camera MJPEG daemon (`:8081`), `MobileNet-SSD` + `YOLOv4-tiny`, `10 Hz` autonomous loop, SQLite MBTiles server | `10 Hz` autonomous loop; `320×240` `15 fps` V4L2 / `10 fps` Pi camera agent; HTTP + WS |
+| **Tier 4: Human-Machine Clients** | **Native Android APK** (`com.liftmate.control`) & **Web Consoles** (`/` & `/diagnostics`) | Auto Wi-Fi binding, `DARK`/`LIGHT` UI themes, `All Console`/`Fit Cockpit`/`Live Map` views, `360°` omni-joystick, camera + side-docked servo slider (`6°–130°`), `980/1420 Hz` alarm, offline map pinning | Android API `24–35` (`2.2 MB` APK); Mobile/Desktop browsers over HTTP/MJPEG/WS |
 
-### 2.2 Verified Configuration Parameters (`config/robot_config.yaml`)
+### 2.2 Baseline Hardware & Configuration Profile (`config/robot_config.yaml`)
 
-All physical limits and hardware pin indices are externalized in `LiftMate-Control-Center/config/robot_config.yaml` and validated by `backend/app/config.py`:
+All physical pins and software boundaries are externalized in `LiftMate-Control-Center/config/robot_config.yaml` and validated by `backend/app/config.py`:
 
-* **Drive Configuration:** `4` Mecanum channels (`rear_left`, `rear_right`, `front_left`, `front_right`), software-calibrated via per-wheel polarity inversion and trim multipliers.
-* **Lower Actuator Group (`lowerJack`):** `4× 12 V 30 mm` linear actuators in parallel, `LOWER_JACK_MAX_RUN_MS = 5000 ms`.
-* **Upper Actuator Group (`upperJack`):** `4× 12 V 50 N 100 mm` linear actuators in parallel, `UPPER_JACK_MAX_RUN_MS = 10000 ms`.
-* **Camera Tilt Servo (`robotServo`):** GPIO `D8`, lazy-attached in firmware, configured safe limits `6°–130°` (default initialization `68°`), firmware hard clamp `0°–180°`.
-* **IMU Tilt Interlock:** BNO055 I2C address `0x29` (`ADR` pulled HIGH), operator warning threshold `8°`, automatic `ESTOP` trip threshold `15°`.
-* **Camera Stream:** `remote_pi` profile via `pi_camera_agent.py` at `320 × 240` resolution and `10 fps`.
+* **Serial Link:** `port: auto` (auto-detects `/dev/ttyUSB*` or `/dev/ttyACM*`), `baud_rate: 115200`, `timeout_s: 0.15`, `heartbeat_interval_s: 1.0`.
+* **Wheel Governor & Calibration:** `default_test_pwm: 50`, `default_drive_pwm: 75`, `max_pwm_limit: 200`, `jog_duration_ms: 350`, `ramp_step_pwm: 25`, per-channel position mapping (`rear_left`, `rear_right`, `front_left`, `front_right`), and per-channel software polarity inversion (`inverted`).
+* **Upper Lifter (`upperJack`):** `4× 12 V 50 N 100 mm` linear actuators, `default_pwm: 120`, `max_pwm: 255`, `jog_pulse_ms: 300`, `max_continuous_run_ms: 10000` (`10 s`), open-loop (no position pot).
+* **Lower Holder (`lowerJack`):** `4× 12 V 30 mm` linear actuators, `inverted: true` (in active hardware `robot_config.yaml`), `default_pwm: 120`, `max_pwm: 255`, `jog_pulse_ms: 250`, `max_continuous_run_ms: 5000` (`5 s`).
+* **Camera Tilt Servo:** Pin `D8`, enabled gate `true`, initialized at `68°`, configured safe window `6°–130°` (code defaults in `config.py` are `10°–170°` centered at `90°`, firmware hard clamp `0°–180°`).
+* **IMU Safety Thresholds:** `I2C 0x29`, tilt warning `8.0°`, critical automatic `ESTOP` trip `15.0°`, stale telemetry threshold `600 ms`.
+* **Software Watchdogs (`config.py` / `robot_config.yaml`):** `wheel_watchdog_ms: 450`, `actuator_watchdog_ms: 600`.
 
 ---
 
-## 3. Electrical Engineering, Circuitry & Power Stage Isolation
+## 3. Electrical Circuitry, Power Distribution & Hardware Pinout
 
-Reliable operation alongside high-inductance DC motors and parallel linear actuators requires strict separation between high-current `12 V` traction rails, regulated `5 V` servo/compute supplies, and logic signals (Figure 2).
+High-current inductive loads (`4×` DC wheel gearmotors + `8×` linear actuators) share a mobile enclosure with logic microcontrollers (`ATmega2560`, `BCM2837`). LiftMate isolates noisy power rails from logic UART/I2C buses while maintaining a unified common ground reference (Figure 2).
 
 ![Figure 2: Electrical Power Distribution, H-Bridge Drive & Microcontroller Pinout Schematic](figures/fig2_electrical_circuit_schematic.png)
 
-### 3.1 Verified Arduino Mega 2560 Pin Allocation
+### 3.1 Complete Arduino Mega 2560 GPIO Allocation
 
-Every hardware pin assignment across `WIRING.md`, `config/robot_config.yaml`, and `firmware/RobotJackSafe/RobotJackSafe.ino` is strictly aligned as follows:
+Verified synchronously across `LiftMate-Control-Center/firmware/RobotJackSafe/RobotJackSafe.ino`, `LiftMate-Control-Center/WIRING.md`, and `LiftMate-Control-Center/config/robot_config.yaml`:
 
-| Subsystem Channel | Functional Role | PWM Pin | Direction `IN1` | Direction `IN2` | Firmware Constant / Watchdog |
+| Subsystem Channel | Firmware Struct / Role | PWM Pin | Direction `IN1` (`inA`) | Direction `IN2` (`inB`) | Notes & Protections |
 | :--- | :--- | :---: | :---: | :---: | :--- |
-| **Wheel Channel 1 (`wheels[0]`)** | Mecanum `rear_left` (default) | `D4` | `D26` | `D27` | `450 ms` wheel timeout |
-| **Wheel Channel 2 (`wheels[1]`)** | Mecanum `rear_right` (default) | `D5` | `D28` | `D29` | `450 ms` wheel timeout |
-| **Wheel Channel 3 (`wheels[2]`)** | Mecanum `front_left` (default) | `D6` | `D44` | `D45` | `450 ms` wheel timeout |
-| **Wheel Channel 4 (`wheels[3]`)** | Mecanum `front_right` (default) | `D7` | `D46` | `D47` | `450 ms` wheel timeout |
-| **Lower Actuator Array (`lowerJack`)** | `4× 12 V 30 mm` Tire Holder Clamps | `D2` | `D22` | `D23` | `600 ms` hold / `5,000 ms` max run |
-| **Upper Actuator Array (`upperJack`)** | `4× 12 V 50 N 100 mm` Main Vehicle Lifters | `D3` | `D24` | `D25` | `600 ms` hold / `10,000 ms` max run |
-| **Camera Tilt Servo (`robotServo`)** | IMX219 Pitch Gimbal | `D8` | — | — | Hard `0°–180°` (Config `6°–130°`, Init `68°`) |
-| **BNO055 9-DOF IMU** | Absolute Heading, Pitch & Roll Sensor | `SDA = D20` | `SCL = D21` | `ADR = HIGH` | I2C Address `0x29` @ `10 Hz` output |
+| **Wheel Motor 1** | `wheels[0]` (`rear_left` default) | `D4` | `D26` | `D27` | Corner position remappable in Wheel Calibration Wizard; `450 ms` timeout |
+| **Wheel Motor 2** | `wheels[1]` (`rear_right` default) | `D5` | `D28` | `D29` | Original sketch label `right rear`; `450 ms` timeout |
+| **Wheel Motor 3** | `wheels[2]` (`front_left` default) | `D6` | `D44` | `D45` | Original sketch label `left front`; `450 ms` timeout |
+| **Wheel Motor 4** | `wheels[3]` (`front_right` default) | `D7` | `D46` | `D47` | Original sketch label `right front`; `450 ms` timeout |
+| **Lower Actuator Array** | `lowerJack` (`4× 12 V 30 mm` parallel) | `D2` | `D22` | `D23` | Single grouped driver channel; `600 ms` hold / `5,000 ms` max run |
+| **Upper Actuator Array** | `upperJack` (`4× 12 V 50 N 100 mm` parallel) | `D3` | `D24` | `D25` | Single grouped driver channel; `600 ms` hold / `10,000 ms` max run |
+| **Camera Tilt Servo** | `robotServo` (gimbal pitch) | `D8` | — | — | Lazy-attached on first `SERVO` command; hard `0°–180°`, active `6°–130°` |
+| **BNO055 9-DOF IMU** | `Adafruit_BNO055(55, 0x29, &Wire)` | — | `SDA = D20` | `SCL = D21` | `100 kHz` I2C with `25,000 µs` bus timeout; `ADR` tied HIGH for `0x29` |
 
-### 3.2 Motor & Actuator Driver Truth Table (`setMotor()`)
+### 3.2 H-Bridge Switching Truth Table (`setMotor()`)
 
-Firmware `RobotJackSafe.ino` commands every H-bridge channel deterministically using `PWM + IN1 + IN2` signaling:
+Inspection of `RobotJackSafe.ino` (lines `91–119`) confirms that every wheel and linear actuator channel drives **1 PWM + 2 Digital Direction pins** (`inA`, `inB`) with shoot-through dead-time protection whenever reversing polarity:
 
-| Commanded Direction (`dir`) | `IN1` Logic State | `IN2` Logic State | `PWM` Output (`analogWrite`) | Physical Motor / Actuator State |
+| Commanded `speed` | `PWM` Pin (`analogWrite`) | `inA` (`IN1`) | `inB` (`IN2`) | H-Bridge Output State |
 | :---: | :---: | :---: | :---: | :--- |
-| `> 0` | `HIGH` | `LOW` | `1..255` | **Forward Drive / Actuator Extend** |
-| `< 0` | `LOW` | `HIGH` | `1..255` | **Reverse Drive / Actuator Retract** |
-| `0` (Brake) | `HIGH` | `HIGH` | `0` | **Dynamic Short-Circuit Electromagnetic Brake** |
-| `0` (Coast / Idle) | `LOW` | `LOW` | `0` | **High-Impedance Coast / Power Release** |
+| `speed == 0` | `0` | `LOW` | `LOW` | **Bridge Disabled / High-Z Coast** (resets `motionStartMs` & `limitTripped`) |
+| `speed > 0` (`+1..+255`) | `speed` | `HIGH` | `LOW` | **Forward Drive / Actuator Extend** (pre-cleared `LOW/LOW/0` on direction flip) |
+| `speed < 0` (`-1..-255`) | `abs(speed)` | `LOW` | `HIGH` | **Reverse Drive / Actuator Retract** (pre-cleared `LOW/LOW/0` on direction flip) |
 
-### 3.3 High-Current Parallel Actuator Design & Safety Rules
+### 3.3 High-Current Actuator Driver & Physical E-STOP Mandates
 
-1. **BTS7960 vs. L298N Current Budgeting:** Connecting four `12 V` linear actuators in parallel per lift/hold group multiplies steady-state and stall inrush current by `4×`, easily exceeding the `2 A` per-channel continuous rating of standard **L298N** drivers (causing thermal shutdown or MOSFET failure under load). For full-load vehicle lifting, high-current **BTS7960 (`43 A`)** half-bridge modules are specified with `R_EN` and `L_EN` tied to logic `+5 V` and dual-PWM or adapted direction wiring.
-2. **Physical E-STOP Main Bus Interruption:** A physical Normally-Closed (`NC`) mushroom emergency stop switch is wired directly in series after the `15 A–20 A` inline main fuse on the `+12 V` motor and actuator power distribution bus. Depressing the switch immediately strips mechanical power regardless of software or USB state.
-3. **5 V Rail Isolation & Common Star Ground:** The camera tilt servo (`D8`) and Raspberry Pi 3 are powered from an external regulated `5 V` BEC rather than the Mega 2560 onboard linear regulator, preventing servo stall brownouts from resetting the microcontroller. A single heavy-gauge common `0 V` star ground ties the `12 V` battery negative, motor/actuator driver grounds, Arduino `GND`, and Pi `GND` together to eliminate UART logic corruption.
+Per `WIRING.md`, full-load lifting safety dictates three mandatory electrical rules:
+
+1. **Parallel Actuator Driver Sizing (`BTS7960 43 A` vs `L298N 2 A`):** Four `12 V` linear actuators wired in parallel draw **`4 × 1.5–3 A = 6–12 A` continuous / inrush**, exceeding the `2 A` per-channel continuous limit of standard `L298N` H-bridges under loaded lifting. When adapting a **BTS7960 (IBT-2 `43 A`)** driver to LiftMate's `1-PWM + 2-DIR` pin map without altering firmware pins: tie `R_EN` and `L_EN` together to the Arduino `PWM` pin (`D2` or `D3`), connect `RPWM` to `inA` (`D22`/`D24`), and connect `LPWM` to `inB` (`D23`/`D25`).
+2. **Physical Mushroom E-STOP Series Cut-Off:** A Normally-Closed (`NC`) mushroom emergency stop switch is wired directly in series after a **`15 A–20 A` inline blade fuse** on the `+12 V` motor/actuator supply rail—disconnecting physical traction and jack power instantaneously while leaving the `5 V` USB-powered Pi 3 and Mega 2560 diagnostics online.
+3. **External `5 V` Servo BEC & Common Star Ground:** The `D8` tilt servo must be powered from an external `5 V/6 V` BEC rather than the Mega 2560's onboard linear regulator to avoid voltage brownouts during camera slewing. All `0 V` returns (`12 V` battery negative, motor/actuator driver logic grounds, Arduino `GND`, BEC `GND`, Raspberry Pi `GND`) share a unified star ground.
 
 ---
 
-## 4. Embedded Firmware & Deterministic Safety Interlocks
+## 4. Embedded Firmware (`RobotJackSafe.ino`) & Safety State Machine
 
-Because wireless Wi-Fi links and Linux processes are inherently stochastic, **safety in LiftMate is enforced at both firmware and middleware layers** (Figure 3).
+Because Wi-Fi frames and Linux scheduling cannot guarantee hard millisecond upper bounds under CPU load, safety in LiftMate is enforced redundantly in both **ATmega2560 C++ firmware** and **FastAPI middleware** (Figure 3).
 
 ![Figure 3: SafetyController Authority State Machine & AutonomousController 10 Hz Pipeline](figures/fig3_autonomous_safety_flowchart.png)
 
-### 4.1 Framed Serial Protocol (`115200` bps)
+### 4.1 Framed ASCII Serial Protocol (`115200` bps)
 
-All Raspberry Pi $\leftrightarrow$ Arduino Mega communications use checksum-free, delimiter-framed ASCII packets `#,CMD,...#` at `115200` baud to reject partial USB fragments and boot bootloader noise:
+`RobotJackSafe.ino` communicates with `backend/app/serial_controller.py` over `/dev/ttyUSB0` (or `/dev/ttyACM0`, configurable to `Serial3` `RX3=15, TX3=14` via `USE_SERIAL3 = true`) at **`115200` baud** using strict `#,CMD,...#` packet framing (`RX_CAPACITY = 96` bytes):
 
-* **Bi-Directional Framing:** Any byte outside valid `#...#` framing delimiters is discarded cleanly by the Mega parser state machine (`RobotJackSafe.ino`).
-* **Synchronized Dual-Jack Commands (`DUAL_JACK`):** Supports independent **Lower Holder**, **Upper Lifter**, or synchronized **Jack & Holder** elevation commands while holding wheels safely halted.
-* **Emergency Halts (`#,S,#`):** Single-frame broadcast immediately zeroes all 4 wheel channels and releases both linear actuator relays.
-* **Inertial Telemetry (`#,heading,pitch,roll,#`):** Streamed at `10 Hz` back to `serial_controller.py` and `imu_controller.py`.
+* **Host $\rightarrow$ Mega Commands:**
+  * `#,PING,#` $\rightarrow$ replies `#,PONG,#` (always allowed, even under `ESTOP`).
+  * `#,STOP,#` $\rightarrow$ immediately halts wheels and actuators, replies `#,OK,#`.
+  * `#,ESTOP,#` $\rightarrow$ stops all outputs, sets `estopLatched = true`, blocks motion until `#,CLEAR_ESTOP,#`.
+  * `#,DRIVE,m1,m2,m3,m4,#` $\rightarrow$ commands signed PWM (`-255..+255`) for all 4 wheels synchronously.
+  * `#,MOTOR,id,pwm,#` $\rightarrow$ drives single calibration channel (`id` `1..4`).
+  * `#,JACK,UPPER|LOWER,pwm,#` & `#,ACT,upperPwm,lowerPwm,#` $\rightarrow$ moves linear actuator groups (`#,DUAL_JACK,1,#` unlocks synchronized upper+lower travel).
+  * `#,SERVO,angle,#` $\rightarrow$ lazy-attaches `D8` servo on first invocation and moves within clamped `[servoMinAngle, servoMaxAngle]`.
+* **Mega $\rightarrow$ Host Responses & Telemetry:**
+  * `#,READY,#` (startup handshake), `#,OK,#`, `#,TIMEOUT,#`, `#,ERR,<REASON>,#` (`BAD_FRAME`, `ACTUATOR_MAX_RUN_LIMIT`, `IMU_OFFLINE`), and `10 Hz` inertial frames parsed from `0x1A` Euler registers (`heading`, `roll`, `pitch` scaled `1/16°`).
 
-### 4.2 Firmware-Level Deterministic Watchdogs (`RobotJackSafe.ino`)
+### 4.2 Firmware Deterministic Protections (`RobotJackSafe.ino`)
 
-| Guard Mechanism | Timeout / Bound | Trigger Condition | Hardware Action |
-| :--- | :--- | :--- | :--- |
-| **Wheel Motion Watchdog** | `450 ms` | Absence of fresh wheel frame while moving | Zeros all 4 wheel PWMs automatically |
-| **Jack Hold Watchdog** | `600 ms` | Loss of active hold-to-run heartbeat during lifting | Immediately halts lower and upper actuators |
-| **Lower Jack Max Run** | `5,000 ms` | Continuous actuation duration exceeds limit | Hard stop to protect end-stops & coils |
-| **Upper Jack Max Run** | `10,000 ms` | Continuous actuation duration exceeds limit | Hard stop to protect lift assembly |
-| **AVR Watchdog (`WDT`)** | Hardware timer | MCU firmware hang or infinite loop | Automatic hardware reset to safe `PWM = 0` |
-| **BNO055 I2C Timeout Recovery** | Non-blocking | Stuck `SDA`/`SCL` lines on `0x29` | Recovers I2C peripheral without freezing main loop |
+| Guard Mechanism | Constant / Bound | Trigger Condition | Deterministic Action |
+| :--- | :---: | :--- | :--- |
+| **Wheel Command Timeout** | `450 ms` | No fresh wheel packet received while moving | `stopWheels()`, emits `#,TIMEOUT,#` |
+| **Jack Hold Watchdog** | `600 ms` | Hold-to-run refresh absent during actuator stroke | `stopJacks()`, emits `#,TIMEOUT,#` |
+| **Lower Jack Max Run** | `5,000 ms` | Continuous actuation duration hits `5 s` | Forces `PWM = 0`, sets `limitTripped = true`, sends `ACTUATOR_MAX_RUN_LIMIT` |
+| **Upper Jack Max Run** | `10,000 ms` | Continuous actuation duration hits `10 s` | Forces `PWM = 0`, sets `limitTripped = true`, sends `ACTUATOR_MAX_RUN_LIMIT` |
+| **AVR Hardware WDT** | `avr/wdt.h` | Firmware loop stall / lockup | Hardware MCU reset returning all outputs to safe `0` |
+| **Non-Blocking I2C Guard** | `25,000 µs` | BNO055 `SDA`/`SCL` bus lockup on `0x29` | Clears TWI timeout flag, retries every `3,000 ms` without blocking motors |
 
-### 4.3 Middleware `SafetyController` State Machine & Audible Warnings
+### 4.3 Middleware `SafetyController` States & Piezo Warning Siren
 
-The Python backend wraps all client HTTP/WebSocket commands inside `SafetyController` (`backend/app/safety_controller.py`), enforcing explicit state governance:
-
-1. `DISCONNECTED` $\rightarrow$ `IDLE`: Entered once `serial_controller.py` verifies the Mega 2560 USB port (`/dev/ttyUSB0` or `/dev/ttyACM0`) and handshake.
-2. `IDLE` $\rightarrow$ `ARMED`: Requires explicit operator **`ARM`** confirmation before any wheel or jack frame is transmitted.
-3. `ARMED` $\leftrightarrow$ `DRIVING` / `ACTUATING`: Prevents accidental simultaneous drive/lift abuse unless explicitly cleared, while feeding client keepalives to prevent spurious `450 ms` drops during active driving.
-4. `*` $\rightarrow$ `ESTOP`: Latched emergency stop triggered on operator abort, `BNO055` tilt $\ge 15°$, serial cable pull, client keepalive loss, or `SAFETY_ASSIST` vision hazard detection. Clearing requires explicit operator reset (`CLEAR_ESTOP`).
-5. **High-Decibel Audible Safety Siren:** Whenever actuator lift/lower controls become active, both `JackAlarmPlayer.kt` (Android native `AudioTrack` synthesizing an alternating **`980 Hz` / `1420 Hz`** piezo warning cadence) and the Web Control Center audio engine sound continuously at maximum media volume to warn surrounding personnel of moving linear hardware.
+In `backend/app/safety_controller.py`, `SafetyState` defines eight explicit states: `DISCONNECTED`, `IDLE`, `ARMED`, `DRIVING`, `ACTUATING_UPPER`, `ACTUATING_LOWER`, `FAULT`, and `EMERGENCY_STOP`. Every serial reconnect enters `IDLE` (never auto-arming), requiring explicit operator **`ARM`** action before transmitting motion packets. Whenever upper or lower jacks are driven, **`JackAlarmPlayer.kt`** on Android (synthesizing a continuous square-wave alternating **`980 Hz` / `1420 Hz`** piezo alert at maximum stream volume) and the Web Control Center's audio generator emit loud acoustic warnings.
 
 ---
 
 ## 5. Omnidirectional Mecanum Kinematics & Software Calibration
 
-To maneuver cleanly beneath a parked chassis without requiring steering axles, LiftMate employs four `45°`-roller Mecanum wheels arranged symmetrically in X/O-geometry (Figure 4).
+To enter directly beneath parked vehicles sideways, diagonally, or in tight turns, LiftMate pairs four `45°`-roller Mecanum wheels driven by `MotorController` (`backend/app/motor_controller.py`) (Figure 4).
 
 ![Figure 4: Omnidirectional Four-Wheel Mecanum Roller Geometry & Inverse Kinematics Model](figures/fig4_mecanum_kinematics.png)
 
-### 5.1 Holonomic Inverse Kinematics Mixing
+### 5.1 Holonomic Mixing & Saturation Normalization
 
-Given operator or autonomous normalized velocity commands $(v_y, v_x, \omega) \in [-1, 1]^3$ representing longitudinal forward/reverse velocity ($v_y$), lateral strafe right/left ($v_x$), and clockwise rotational rate ($\omega$), normalized per-wheel velocity commands in `motor_controller.py` are computed as:
+Given normalized translational and rotational commands $(v_y, v_x, \omega) \in [-1, +1]^3$—where $+v_y$ moves forward, $+v_x$ strafes right, and $+\omega$ rotates clockwise—`compute_mecanum_wheel_pwms()` evaluates four unscaled wheel mixing factors:
 
 $$
 \begin{aligned}
-v_{FL} &= \operatorname{clamp}\left(v_y + v_x + \omega,\ -1,\ +1\right) \\
-v_{FR} &= \operatorname{clamp}\left(v_y - v_x - \omega,\ -1,\ +1\right) \\
-v_{RL} &= \operatorname{clamp}\left(v_y - v_x + \omega,\ -1,\ +1\right) \\
-v_{RR} &= \operatorname{clamp}\left(v_y + v_x - \omega,\ -1,\ +1\right)
+r_{\text{FL}} &= v_y + v_x + \omega \\
+r_{\text{FR}} &= v_y - v_x - \omega \\
+r_{\text{RL}} &= v_y - v_x + \omega \\
+r_{\text{RR}} &= v_y + v_x - \omega
 \end{aligned}
 $$
 
-When aggregate vector magnitude exceeds saturation, `MotorController` scales proportionally or clamps cleanly within $[-1, +1]$ to preserve trajectory directionality.
-
-### 5.2 Calibration Trim & Polarity Compensation
-
-Real-world Mecanum builds exhibit minor gearbox friction variance and motor wiring polarity differences across corners. Rather than hardcoding offsets in firmware, each channel $i \in \{FL, FR, RL, RR\}$ maps to an integer Mega PWM command via `config/robot_config.yaml`:
+To prevent directional distortion when diagonal motion combines with rotation ($|r_p| > 1.0$), peak normalization divides all four positions equally before scaling by the speed governor ceiling $S = \min(\text{base\_pwm},\ \text{max\_pwm\_limit},\ 255)$ (where default `max_pwm_limit = 200`):
 
 $$
-\text{PWM}_i = s_i \cdot \operatorname{round}\left(P_{\max} \cdot g_i \cdot v_i\right), \quad s_i \in \{+1, -1\}, \quad g_i \in [0.2,\ 2.0]
+\text{peak} = \max\left(|r_{\text{FL}}|,\ |r_{\text{FR}}|,\ |r_{\text{RL}}|,\ |r_{\text{RR}}|,\ 1.0\right), \qquad f_p = \frac{r_p}{\text{peak}}
 $$
 
-where $s_i$ compensates lead polarity, $g_i$ trims corner-to-corner speed imbalance during pure strafing or straight driving, and $P_{\max} \le 255$ sets the global speed governor ceiling.
+### 5.2 Runtime Hardware Channel Remapping & Polarity Compensation
+
+Physical motor leads and gearbox mounting vary per build. Instead of recompiling Arduino firmware, `robot_config.yaml` maps each physical channel $c \in \{1, 2, 3, 4\}$ (`D4..D7`) to its calibrated corner position $\text{pos}(c) \in \{\text{front\_left}, \text{front\_right}, \text{rear\_left}, \text{rear\_right}\}$ and polarity multiplier $s_c \in \{+1, -1\}$:
+
+$$
+\text{PWM}_c = \operatorname{clamp}\left(s_c \cdot \operatorname{round}\left(f_{\text{pos}(c)} \cdot S\right),\ -255,\ +255\right)
+$$
+
+Timed jog tests (`command_single_motor`) additionally constrain test pulses to `100–500 ms` auto-stop timers (`350 ms` default at `50 PWM`) so uncalibrated polarity checks cannot launch the robot off bench blocks.
 
 ---
 
-## 6. Offline Computer Vision & Autonomous Obstacle Avoidance
+## 6. AI Technology: Offline Computer Vision & Autonomous Obstacle Avoidance
 
-LiftMate integrates completely air-gapped onboard perception so the robot can detect shop hazards, vehicles, walls, and pedestrians in the field without cloud offload (Figure 5).
+LiftMate embeds a completely self-contained edge AI perception and reactive navigation stack (`AIVisionController` + `AutonomousController`) with **zero external internet or cloud API calls** (Figure 5).
 
 ![Figure 5: Offline Dual-Model Computer Vision & Three-Sector Hazard Assessment Pipeline](figures/fig5_ai_vision_pipeline.png)
 
-### 6.1 Dual-Model CPU Inference Pipeline (`AIVisionController`)
+### 6.1 Dual-Model OpenCV CPU DNN Architecture
 
-`pi_camera_agent.py` captures raw `320 × 240 @ 10 fps` frames from the Raspberry Pi Sony **IMX219** CSI module and exposes a local MJPEG endpoint on port `8081`. `AIVisionController` (`backend/app/ai_vision_controller.py`) consumes frames asynchronously via OpenCV's CPU Deep Neural Network (`cv2.dnn`) engine using two bundled local models:
+Both neural network detectors reside locally in `LiftMate-Control-Center/data/models/`:
+1. **`MobileNet-SSD` (Caffe):** `MobileNetSSD_deploy.caffemodel` (`22 MB`) + `.prototxt` (`44 KB`) — rapid edge inference across 20 PASCAL VOC object classes (`car`, `person`, `bus`, `motorbike`, `chair`, `bottle`, etc.).
+2. **`YOLOv4-tiny` (Darknet):** `yolov4-tiny.weights` (`23 MB`) + `.cfg` (`3.2 KB`) — compact 80-class COCO detector improving truck, pedestrian, bench, and shop hazard sensitivity.
 
-1. **`MobileNet-SSD` (Caffe — `MobileNetSSD_deploy.caffemodel`, `22 MB`):** Lightweight single-shot detector for rapid edge object localization.
-2. **`YOLOv4-tiny` (Darknet — `yolov4-tiny.weights`, `23 MB`):** Compact multi-scale detector tuned for general obstacles, vehicles, and human presence.
+Both networks execute in OpenCV `cv2.dnn` constrained to two CPU worker threads (`cv2.setNumThreads(2)`) inside a dedicated background daemon thread (`_inference_loop`), reading JPEG frames from `CameraController` (supplied by `pi_camera_agent.py` on port `:8081`) without ever opening `/dev/video0` twice or blocking motor UART threads. Whenever `notify_motor_activity()` fires during active driving, the AI loop automatically yields CPU scheduling priority to real-time control commands.
 
-During live Raspberry Pi 3 hardware execution, dual-model CPU inference latency was directly observed between **`323.5 ms` and `739.9 ms`** per analyzed cycle (`~1.35` to `3.1 Hz` semantic refresh alongside `10 fps` raw video streaming).
+### 6.2 Three-Sector Spatial Hazard Mapping & Operational Modes
 
-### 6.2 Three-Sector Spatial Hazard Mapping
+Each detected object's normalized horizontal bounding box maps into three equal optical corridors across the camera FOV (`LEFT [0.00–0.33)`, `CENTER [0.33–0.67)`, `RIGHT [0.67–1.00]`) scored into `LOW`, `MEDIUM`, `HIGH`, or `UNKNOWN` risk tiers:
 
-Each normalized bounding box horizontal center and width maps onto three horizontal regions across the field of view:
+* **Mode 1 — `DETECTION`:** Observation-only HUD publishing bounding boxes, classes, track IDs, car counts, and zone warnings without blocking operator joystick control.
+* **Mode 2 — `SAFETY_ASSIST`:** Active hazard guard—whenever `CENTER` reports `HIGH` risk (such as a vehicle or person directly ahead), `AIVisionController` raises `"POTENTIAL OBSTACLE – STOP"`, rejects forward manual drive commands, and triggers an emergency wheel stop.
+* **Mode 3 — `AI_NAVIGATION` (Safety-Locked):** Locked (`ai_navigation_locked = true`) until dedicated rangefinders/LiDAR physical validation is completed (`test_ai_vision.py` asserts Mode 3 rejection).
 
-$$
-\text{Sector}(x_{\text{norm}}) =
-\begin{cases}
-\text{LEFT}, & 0.00 \le x_{\text{norm}} < \frac{1}{3} \\
-\text{CENTER}, & \frac{1}{3} \le x_{\text{norm}} < \frac{2}{3} \\
-\text{RIGHT}, & \frac{2}{3} \le x_{\text{norm}} \le 1.00
-\end{cases}
-$$
+### 6.3 Closed-Loop `10 Hz` Autonomous Avoidance FSM (`AutonomousController`)
 
-Detected objects are scored into `LOW`, `MEDIUM`, `HIGH`, or `UNKNOWN` hazard levels based on spatial overlap and bounding-box area:
+Engaging **ACTIVATE AUTO** switches from `MANUAL` to guarded low-speed obstacle avoidance (`55–125 PWM`, presets `Slow 70`, `Cruise 90`, `Fast 110`) executing at `10 Hz` (`CONTROL_INTERVAL_S = 0.10 s`):
 
-* **`DETECTION` Mode:** Renders live annotated bounding boxes and sector risk badges on Android (`CameraOverlayView`) and Web HUDs purely as an operator visual aid without interrupting manual driving.
-* **`SAFETY_ASSIST` Mode:** Escalates high-severity central obstructions to an active **`ESTOP`** via `SafetyController` and directly supplies spatial clearance states to autonomous navigation.
+1. **Strict Preconditions & Stale-Frame Fail-Safe (`1.8 s`):** Every `0.10 s` tick validates active Mega serial link, disarmed `ESTOP` clear, inactive actuators, ready AI model, and camera frame age $\le 1.8\text{ s}$. Any failure enters **`PAUSED_UNCERTAIN`** with zeroed wheels.
+2. **`CRUISE`:** Drives straight ahead (`vy > 0`) when `CENTER` is unobstructed, applying subtle side clearance trim if one flank warns `MEDIUM`.
+3. **`BRAKING` (`0.25 s` latch):** Halts all four wheels for `0.25 s` immediately upon `CENTER` blockage to eliminate forward inertia prior to turning.
+4. **`AVOID_LEFT` / `AVOID_RIGHT` (`0.60 s` minimum commitment):** Compares `LEFT` and `RIGHT` hazard scores and sustains Mecanum evasion toward the clearer side for at least `0.60 s` to avoid rapid oscillation.
+5. **`SCAN_ROTATE` (`<= 2.50 s` bounded yaw search):** When all three optical zones report blockage simultaneously, pivots in place up to `2.50 s` searching for an open corridor.
+6. **Instant Manual Preemption (`manual_override()`):** Any operator drive stick touch, actuator move, reset, or stop click cancels Autonomous mode instantaneously and yields control back to the operator.
 
-### 6.3 Closed-Loop Obstacle Avoidance (`AutonomousController`)
+### 6.4 Live AI Vision & Autonomous Execution Screenshots
 
-Running on a `10 Hz` supervisory tick (`backend/app/autonomous_controller.py`), `AutonomousController` implements a deterministic reactive state machine designed specifically around the Pi 3's bounded `323–739 ms` perception rate and the chassis' momentum:
+Figure Series A below captures our **real compiled Android App (`LiftMate-Control.apk`)** and **Web Control Center** receiving real-time inferences from `MobileNet-SSD + YOLOv4-tiny` processing a floor-level automotive service bay camera test scene (`sim_garage_cam`, resized `640×480` via the `:8081` camera agent interface with `SIMULATOR` Mega telemetry). On the host testbench, dual-model OpenCV CPU inference achieved **`7.8 ms–13.8 ms` per cycle (`6.5 FPS` UI update rate)**, detecting the parked sedan at **`99.7%` confidence (`CAR 99%`, LEFT/CENTER sectors)** and the workshop technician at **`82.6%` confidence (`PERSON 82%`/`83%`, RIGHT sector)**, cleanly driving both the **`DETECTION`** HUD badges and **`AUTONOMOUS: SCAN_ROTATE`** state machine transition (`"All zones blocked — scanning for clear exit"`):
 
-1. **Safety Preconditions & Freshness Guard:** Before issuing motion, every `10 Hz` cycle verifies active Mega USB connection, non-`ESTOP` status, valid vision model initialization, and camera frame freshness **$\le 1.8\text{ s}$**. Any stall (`> 1.8 s`), `UNKNOWN` vision state, or disconnect immediately locks into **`PAUSED_UNCERTAIN`** with zeroed wheels.
-2. **Speed Clamping:** Autonomous forward/turn PWM magnitudes are strictly bounded to **`55–125 PWM`** for predictable workshop braking distances.
-3. **Clear-Path Cruise (`CRUISE`):** When the `CENTER` sector is clear, the robot drives forward continuously (`vy > 0`).
-4. **Brake-First Impact Mitigation (`BRAKING` — `0.25 s` latch):** Upon `CENTER` blockage, wheels zero completely for `0.25 s` to dissipate kinetic momentum prior to steering.
-5. **Clearer-Side Evasion (`AVOID_LEFT` / `AVOID_RIGHT` — `0.60 s` latch):** Compares `LEFT` and `RIGHT` sector risk scores and commits a directional strafe/turn maneuver toward the clearer corridor for at least `0.60 s` to prevent oscillating ("chattering") left-right hesitation.
-6. **Bounded Search (`SCAN_ROTATE` — max `2.5 s`):** If both left and right corridors are simultaneously blocked, the robot executes an in-place Mecanum yaw scan (bounded at `2.5 s` maximum) looking for an escape heading.
-7. **Supreme Manual Override (`manual_override()`):** Any operator joystick command, linear jack button, or stop signal from either the Android app or the spare web console **immediately cancels autonomous mode cleanly** and returns instant physical authority to the human user.
+| Android Console — Live AI Detection & Map (`DARK`) | Android Fit Cockpit — Autonomous `SCAN_ROTATE` Active | Fullscreen Camera + AI HUD + Floating Servo Dock |
+| :---: | :---: | :---: |
+| <img src="screenshots/android_all_console_dark.png" alt="Android All Console Dark with Live AI Detections CAR 99% and PERSON 82%" width="100%"/> | <img src="screenshots/android_autonomous_active.png" alt="Android Fit Cockpit with Autonomous SCAN_ROTATE Engaged" width="100%"/> | <img src="screenshots/android_fullscreen_cam_ai.png" alt="Android Fullscreen Camera with AI Boxes and Floating Right-Docked Servo Slider" width="100%"/> |
 
 ---
 
-## 7. Standalone Edge Networking, Offline GIS & Android Application
+## 7. Android Mobile Application (`LiftMate-Control.apk`) — Live UI Showcase
 
-Field technicians require one-tap connectivity and modern mobile ergonomics even inside underground parking structures with zero ISP access (Figure 6).
+Engineered specifically for Android smartphones (`minSdk 24`, `targetSdk 35`, built with Kotlin + AndroidX cleanly into the signed **`2.2 MB` `LiftMate-Control.apk`**), `com.liftmate.control` delivers zero-configuration field usability (Figure 6).
 
-![Figure 6: LiftMate Control Android Application Architecture & Multi-Mode UI](figures/fig6_mobile_app_workflow.png)
+![Figure 6: LiftMate Control Android Application Architecture & Multi-Mode UI Workflow](figures/fig6_mobile_app_workflow.png)
 
-### 7.1 Deterministic Raspberry Pi 3 Wi-Fi Access Point
+### 7.1 Mobile Engineering Highlights
 
-Early deployments showed conflicts when standard `NetworkManager` / `wpa_supplicant` services reclaimed `wlan0`, hiding `SSID: LiftMate` or rejecting mobile associations. `scripts/setup_pi_hotspot.sh` and the persistent boot script `/usr/local/bin/liftmate-wifi-fallback.sh` (`liftmate-wifi.service`) eliminate these conflicts deterministically on startup:
+1. **Zero-Config `WifiNetworkBinder` + `HostCandidatePlanner`:** Because the `LiftMate` Wi-Fi AP intentionally provides **no internet**, modern Android OS versions route HTTP traffic away to cellular LTE unless forced. `WifiNetworkBinder` registers a `NetworkRequest` (`TRANSPORT_WIFI`) and calls `connectivityManager.bindProcessToNetwork(network)` automatically—ensuring seamless `http://10.42.0.1` API & MJPEG delivery on first launch even alongside active mobile data. `HostCandidatePlanner` concurrently probes saved custom hosts, `10.42.0.1`, `10.42.0.1:8000`, `192.168.18.36:8000`, etc. via `java.net.HttpURLConnection` + `Executors.newCachedThreadPool()`.
+2. **Beside-Camera Tilt Servo Ergonomics (`cameraStageRow`):** The vertical `VerticalFaderView` tilt servo slider (`6°–130°`, init `68°`) sits **directly beside the live camera viewport** in `All Console`, `Fit Cockpit`, and as a translucent floating right-docked bar in **Fullscreen Camera** mode (`showFullscreenCameraDialog()`)—allowing operators to sweep camera pitch up/down while watching live AI bounding boxes continuously.
+3. **Adaptive `DARK` / `LIGHT` Themes & 3 Fit-Any-Screen Modes:** `RobotTheme.kt` styles surfaces, borders, pill gradients, and status typography dynamically across sunny outdoor daylight (`LIGHT` mode) and dim night/garage inspections (`DARK` mode). Operators toggle single-tap between **`All Console`**, **`Fit Cockpit`** (responsive sizing squeezing camera + servo + autonomous toggle + `360°` joystick onto any phone height with zero scrolling), and **`Live Map`**.
+4. **Haptic/Audible Lifting Safety (`JackAlarmPlayer.kt`) & Real-Time `RobotChassisView`:** Custom canvas views animate all four Mecanum wheel PWMs (`[RL/RR/FL/FR]`), camera servo angle cone, IMU pitch/roll/heading, and spring-return `Jack`, `Holder`, and synchronized `Jack & Holder` vertical faders (`ACTION_UP` forces immediate zero-PWM stop + siren cutoff).
 
-* Releases `wlan0` cleanly from `NetworkManager` (`nmcli device set wlan0 managed no`) and terminates `wpa_supplicant`.
-* Assigns static AP IP **`10.42.0.1/24`** to `wlan0`.
-* Launches **`hostapd`** broadcasting `SSID: LiftMate` (WPA2 passphrase `12345678`, 2.4 GHz channel `6`).
-* Starts **`dnsmasq`** providing rapid DHCP leases across `10.42.0.10 – 10.42.0.200`.
-* Exposes **`liftmate-port80.service`** (proxying port `80` $\rightarrow$ FastAPI port `8000`) alongside `liftmate-control.service` (`:8000`) and `liftmate-camera.service` (`:8081`), allowing spare browser access simply via `http://10.42.0.1`.
+### 7.2 Complete Mobile App Screenshot Gallery
 
-### 7.2 Offline Qatar GIS & Repair Pin Engine
+| Light Theme — `Fit Cockpit` (Camera + Beside Servo + 360° Stick) | Dark Theme — `All Console` Scrolled (Jacks, 360° Stick & Chassis View) | Offline Qatar Map (`DARK` & `LIGHT` Modes) |
+| :---: | :---: | :---: |
+| <img src="screenshots/android_fit_cockpit_light.png" alt="Android Light Theme Fit Cockpit" width="100%"/> | <img src="screenshots/android_actuators_telemetry_dark.png" alt="Android 3 Linear Jacks 360 Joystick and Live Robot Chassis Telemetry" width="100%"/> | <img src="screenshots/android_live_map_light.png" alt="Android Light Theme Live Offline Qatar Map" width="100%"/> |
 
-`NavigationController` (`backend/app/navigation_controller.py`) embeds a fully self-contained geographic stack:
-
-* **Offline Map Tiles (`qatar_offline.mbtiles`, `6.6 MB`):** SQLite tile repository served natively by FastAPI without internet access across selectable map themes (**Satellite**, **Street**, **Dark**, and **Local** vector/grid fallback), rendered locally via bundled `frontend/vendor/leaflet/`.
-* **Dead-Reckoning & Pose Fusion:** Combines BNO055 magnetic/fused yaw (`heading`) with kinematic drive commands to trace relative robot position trails directly onto the live map.
-* **Persistent Recovery Pin Database (`liftmate_routes.db`):** Allows field teams to drop, label, inspect, and clear disabled-vehicle **Car Repair Pins** while tracking estimated electric deployment metrics and sustainability CO₂ savings logs.
-
-### 7.3 Native Android Mobile Application (`LiftMate-Android`)
-
-Built in Kotlin (`com.liftmate.control`, `minSdk 24`, `targetSdk 35`, packaged as `LiftMate-Control-Center/android/LiftMate-Control.apk`, `2.2 MB`), the Android app turns any phone into a dedicated field controller:
-
-1. **Zero-Config OS Socket Binding (`WifiNetworkBinder` + `HostCandidatePlanner`):** Android routinely drops HTTP requests to captive/offline Wi-Fi hotspots when cellular 4G/5G has internet access. Upon launch and resume, the app automatically locates/requests the `LiftMate` Wi-Fi network, explicitly binds the application process socket to the Wi-Fi transport via Android `ConnectivityManager`, and probes candidate endpoints in parallel (`http://10.42.0.1`, `http://10.42.0.1:8000`, and LAN fallback `http://192.168.18.36:8000`) for plug-and-play connection.
-2. **Dark & Light Themes (`RobotTheme.kt` / `ThemePalettes`):** Instant one-tap switching between high-contrast outdoor `LIGHT` visibility and glare-free night/garage `DARK` cockpit themes.
-3. **Responsive Any-Screen Workspace Modes:**
-   * **`All Console`:** Unified dashboard exposing the live camera AI HUD docked side-by-side with the **Camera Tilt Servo slider (`6°–130°`)**, interactive offline map, Mecanum chassis feedback, `360°` joystick, `3` actuator faders (`Jack`, `Holder`, `Jack & Holder`), autonomous switch, and E-STOP.
-   * **`Fit Cockpit`:** Dynamically scaled compact single-viewport cockpit fitting live camera + beside servo tilt dock, autonomous toggle, and `360°` joystick cleanly onto any phone screen without scrolling.
-   * **`Live Map`:** Expanded embedded `TouchableMapWebView` displaying `/mobile-map` with touch-interception protection (`requestDisallowInterceptTouchEvent`) so pinch/pan gestures never fight outer Android scrolls.
-4. **Custom Hardware Control Views:**
-   * `OmniJoystickView.kt`: Proportional `360°` circular omni-stick transmitting directional $(v_y, v_x, \omega)$ vectors.
-   * `VerticalFaderView.kt`: Spring-return hold-to-run vertical controls for **Jack** (Upper), **Holder** (Lower), and **Jack & Holder** (Synchronized Dual Group), plus sticky vertical **Servo (`6°–130°`) tilt sliders docked directly beside both the inline and fullscreen camera feeds** so operators watch live video while tilting up/down.
-   * `RobotChassisView.kt`: Real-time four-wheel vector & polarity visualizer.
-   * `CameraOverlayView.kt`: Live MJPEG stream compositor drawing `LEFT/CENTER/RIGHT` AI hazard bounding boxes and state badges.
+*(Right-most screenshot shows Light Mode Offline Map with `Exit Full`, `Reset Gyro`, `Locate Me`, `Move`, `Pin Car`, `Tap Pin`, green `Car Repaired` logger, and `Clear All`.)*
 
 ---
 
-## 8. Complete Operator Manual: Setup, Connection & Field Use
+## 8. Web Control Centers (`simple.html` & `/diagnostics`) & Offline Qatar GIS
 
-### 8.1 Pre-Flight Hardware Inspection
+Even if an operator switches phones or tablets without installing the APK, LiftMate serves two complementary zero-install browser dashboards directly over **`http://10.42.0.1`** (`:80` port-80 proxy forwarding cleanly to `:8000`):
 
-Before applying `12 V` main power:
-1. Verify the physical red Mushroom **E-STOP** switch is intact and pressed IN until electrical checks finish.
-2. Confirm the **USB serial cable** is firmly seated between the **Arduino Mega 2560** and the **Raspberry Pi 3**. *(If loose, the UI displays the fail-safe banner: `"Arduino Mega USB disconnected — plug Mega USB cable into Raspberry Pi"` and locks motion).*
-3. Verify the `15 A – 20 A` inline fuse, common star `GND` tie, external `5 V` BEC supply for Servo `D8`, and **BNO055 (`0x29`)** `SDA/SCL` (`D20/D21`) header pins.
-4. Ensure all 4 Mecanum rollers rotate freely without debris.
+1. **Mobile-Friendly Simple Control Center (`/` or `/simple` — `frontend/simple.html`):** Features the exact same camera-beside-servo layout (`#cameraStage` + `#camServoDock`), AI `DETECTION`/`SAFETY`/`AUTONOMOUS` bar, `DARK`/`LIGHT` theme switch, compact wheel pad, dual jack sliders with piezo buzzer, and embedded interactive **Live Robot Map**.
+2. **Engineering Diagnostic & Calibration Workstation (`/diagnostics` — `frontend/index.html`):** Built for calibration bench bring-up across 10 modular panels (`System Overview`, `Wheel Testing`, `Movement Control`, `Upper Actuators`, `Lower Actuators`, `Camera Monitor`, `Servo Controller`, `IMU Monitoring`, `Diagnostics & Logs`, `Safety & Electrical`), featuring live `10 Hz` WebSocket streaming (`/ws/telemetry`), verified Mega pin reference table, guided 14-step bench verification checklist, individual wheel jog + polarity calibration wizard, and AI detection HUD + beside-camera servo tab.
 
-### 8.2 Power-On & Automatic Boot Sequence
+### 8.1 Web Consoles & AI Map Integration Screenshots
 
-1. Twist/release the Mushroom **E-STOP** switch to energize the `+12 V` bus and Raspberry Pi 3 / Mega 2560 rails.
-2. Wait **`~30–45 seconds`** for `systemd` services on Raspberry Pi 3 to initialize:
-   * `liftmate-wifi.service` brings up hotspot **`LiftMate`** at **`10.42.0.1`**.
-   * `liftmate-camera.service` initializes IMX219 streaming (`:8081`).
-   * `liftmate-control.service` & `liftmate-port80.service` launch FastAPI (`:80` / `:8000`).
+| Spare Web Control Center (`http://10.42.0.1/`) — AI Vision, Servo & Car Pin Map | Advanced Engineering Diagnostics Workstation (`/diagnostics`) |
+| :---: | :---: |
+| <img src="screenshots/web_simple_compact.png" alt="LiftMate Web Simple Control Center with AI Detections, Beside Servo, and Qatar Car Pin Map" width="88%"/> | <img src="screenshots/web_engineering_dashboard.png" alt="LiftMate Advanced Engineering Diagnostic Console showing 10Hz WebSocket, Pinout Table, and Verification Checklist" width="100%"/> |
 
-### 8.3 Connecting via Android Mobile App (`LiftMate-Control.apk`)
+### 8.2 Offline Qatar GIS & Car Repair Pin Persistence (`NavigationController`)
 
-1. Install `/Volumes/Data/robotcar/LiftMate-Control-Center/android/LiftMate-Control.apk` (or download `LiftMate-Control.apk` from the repository) onto an Android device (Android `7.0+` / API `24+`).
-2. Connect the phone's Wi-Fi to SSID **`LiftMate`** using passphrase **`12345678`**. *(Wait ~3 seconds; accept "Keep Wi-Fi connection without internet" if Android prompts).*
-3. Open **LiftMate Control**:
-   * The app automatically binds Wi-Fi traffic (`WifiNetworkBinder`), probes `10.42.0.1`, and transitions the status pill to connected telemetry.
-   * Use the header toggle pills to switch between **`DARK` / `LIGHT` theme** and **`All Console` / `Fit Cockpit` / `Live Map`** screen modes.
+`backend/app/navigation_controller.py` serves cached **Qatar offline tiles** directly from `LiftMate-Control-Center/data/maps/qatar_offline.mbtiles` (`6.6 MB`) plus locally synthesized Qatar road/landmark tiles around **Doha** (`DEFAULT_QATAR_ORIGIN = 25.185685042934363, 51.57190161939388`) covering corridors from **Souq Waqif / Corniche / Msheireb** to **Lusail**, **Al Wakrah**, **Education City**, and **Al Khor**, paired with embedded **Leaflet** assets (`/vendor/leaflet/`). Dead-reckoning odometry fuses commanded Mecanum velocities with `BNO055` heading, while target recovery jobs persist inside SQLite (`LiftMate-Control-Center/data/routes/liftmate_routes.db`) as interactive **Car Repair Pins** (seen in `web_simple_compact.png` as `#1 Red Sedan`) complete with a **"Car Repaired (Sustainability)"** log tracker.
 
-### 8.4 Connecting via Spare Web Control Center
+---
 
-From any laptop, tablet, or spare phone connected to `LiftMate` (`12345678`):
-1. Open Chrome/Safari and navigate to **`http://10.42.0.1`** (or `http://10.42.0.1:8000`).
-2. For full diagnostics, wheel calibration trim sliders, and desktop fleet mapping, use `/index.html`; for compact mobile layout, `/simple.html` loads cleanly by default.
+## 9. Standalone Edge Networking, Deployment & Operator Manual
 
-### 8.5 Step-by-Step Field Operation
+### 9.1 Persistent Automatic Startup & Wi-Fi Hotspot (`setup_pi_hotspot.sh`)
 
-| Step | Action | Expected Feedback & Safety Check |
-| :---: | :--- | :--- |
-| **1. Arm Robot** | Tap **`ARM`** in the top status control bar | `SafetyController` switches `IDLE -> ARMED`; wheels remain stopped until stick input |
-| **2. Drive to Vehicle** | Drag the `360°` omni-joystick (or select strafe/rotate controls) | Chassis drives holonomically; `RobotChassisView` displays live wheel speeds; releasing immediately brakes |
-| **3. Autonomous Approach (Optional)** | Tap **`AUTO OBSTACLE AVOID`** toggle | Robot cruises slowly (`55–125 PWM`), stops on `CENTER` obstacles, and sidesteps clear flanks. Touching any manual drive control cancels Auto instantly |
-| **4. Clamp Tires (`Lower Holder`)** | Slide and hold **Holder** vertical fader UP | Piezo `980/1420 Hz` warning siren sounds; `4× 30 mm` clamps extend (`<= 5 s`). Release stops immediately (`600 ms` hold watchdog) |
-| **5. Elevate Load (`Upper / Sync`)** | Hold **Jack** or **Jack & Holder** fader UP | Siren sounds continuously; BNO055 monitors chassis tilt (`Warn 8°`, `Trip 15°`). Stop immediately at desired clearance |
-| **6. Track & Pin Site** | Open **`Live Map`** view and tap to drop a Car Repair Pin | Logs vehicle location onto offline Qatar MBTiles map (`liftmate_routes.db`) |
-| **7. Emergency / End Task** | Tap red **`ESTOP`** or hit physical Mushroom switch | Immediately kills all wheel and actuator PWMs and latches `ESTOP` state |
+To eliminate Wi-Fi drops caused by Debian `NetworkManager` / `wpa_supplicant` fighting over `wlan0`, `LiftMate-Control-Center/scripts/setup_pi_hotspot.sh` configures a deterministic boot sequence via four `systemd` services:
 
-### 8.6 Quick Field Troubleshooting
+1. **`liftmate-wifi.service`** (`/usr/local/bin/liftmate-wifi-fallback.sh`): Marks `wlan0` unmanaged by `NetworkManager`, clears prior interfaces, assigns static AP address **`10.42.0.1/24`**, restarts **`dnsmasq`** (issuing `10.42.0.10–10.42.0.200`), and launches **`hostapd`** (`/etc/hostapd/liftmate.conf`, SSID **`LiftMate`**, WPA2-PSK **`12345678`**, 2.4 GHz channel `6`).
+2. **`liftmate-camera.service`**: Runs `pi_camera_agent.py` streaming V4L2 MJPEG (`320×240 @ 15 fps`) locally on `:8081`.
+3. **`liftmate-control.service`**: Executes `python3 -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000` inside `/home/pi/LiftMate-Control-Center`.
+4. **`liftmate-port80.service`**: Transparently forwards HTTP port `80` $\rightarrow$ `8000` so mobile browsers only need `http://10.42.0.1`.
 
-| Symptom | Root Cause | Resolution |
+### 9.2 Deploying Code Updates to the Raspberry Pi 3
+
+Once connected to `LiftMate` (`10.42.0.1`), updated frontend builds (`simple.html`, `index.html`, `mobile_map.html`, `styles.css`, `app.js`, `liftmate_offline_map.js`) and the freshly rebuilt signed APK (`LiftMate-Control.apk`) are deployed via SSH while preserving calibrated hardware settings (`config/robot_config.yaml` and `data/routes/liftmate_routes.db`):
+
+```bash
+scp LiftMate-Control-Center/frontend/{simple.html,index.html,mobile_map.html} pi@10.42.0.1:/home/pi/LiftMate-Control-Center/frontend/
+scp LiftMate-Control-Center/frontend/css/styles.css pi@10.42.0.1:/home/pi/LiftMate-Control-Center/frontend/css/
+scp LiftMate-Control-Center/frontend/js/{app.js,liftmate_offline_map.js} pi@10.42.0.1:/home/pi/LiftMate-Control-Center/frontend/js/
+scp LiftMate-Control-Center/android/LiftMate-Control.apk pi@10.42.0.1:/home/pi/LiftMate-Control-Center/android/LiftMate-Control.apk
+ssh pi@10.42.0.1 "echo pi | sudo -S systemctl restart liftmate-control.service"
+```
+
+*(Operators can also download the updated APK directly over the robot AP from `http://10.42.0.1/api/app/liftmate.apk`.)*
+
+### 9.3 Field Connection & Operation Workflow
+
+| Phase | Operator Procedure | Expected System Feedback |
 | :--- | :--- | :--- |
-| `"Arduino Mega USB disconnected"` | USB cable unplugged or loose between Pi 3 and Mega 2560 | Reseat USB cable at both Pi 3 and Mega; `serial_controller.py` auto-reconnects without rebooting |
-| `LiftMate` SSID asks for password then fails / drops | Prior `NetworkManager` / `wpa_supplicant` lock on `wlan0` | Run `sudo bash LiftMate-Control-Center/scripts/setup_pi_hotspot.sh` to enforce `liftmate-wifi.service` |
-| App connected to `LiftMate` Wi-Fi but API times out | Phone cellular data hijacked HTTP socket routing | Confirm **LiftMate Control** APK `v1.0+` is used (`WifiNetworkBinder` forces Wi-Fi binding); toggle Airplane Mode + Wi-Fi for browsers |
-| Wheels spin in wrong corner direction or drift sideways | Polarity sign or motor friction imbalance | Adjust per-wheel `invert` sign (`+1`/`-1`) and `gain` (`0.2–2.0`) via Web Diagnostics or `config/robot_config.yaml` |
-| Actuators stall under heavy load | L298N `2 A` current limit tripped by `4×` parallel actuators | Upgrade actuator drive channels to `43 A` BTS7960 modules per `WIRING.md` and check `15–20 A` inline fuse |
+| **1. Power Up** | Plug USB between Mega 2560 and Pi 3; verify physical NC Mushroom E-STOP is released (`+12 V` ON) | Pi broadcasts SSID `LiftMate` within `~30–45 s`; Mega sends `#,READY,#` |
+| **2. Connect Client** | Join Wi-Fi **`LiftMate`** (pass **`12345678`**) on phone; open **LiftMate Control** APK (or browse `http://10.42.0.1`) | App status bar locks onto `LIVE 10.42.0.1 • Mega OK` automatically |
+| **3. Arm & Align** | Press **ARM**, use `360°` omni-joystick (`Fit Cockpit` or `All Console`) & beside-camera **SERVO** slider (`6°–130°`) | Smooth Mecanum positioning around vehicle wheels; releasing stick triggers immediate zero-PWM stop |
+| **4. Autonomous Option** | Toggle **`ACTIVATE AUTO`** (`Slow 70` / `Cruise 90` / `Fast 110`) | Robot navigates slowly while avoiding `CENTER` obstacles (`SCAN_ROTATE` / `AVOID_LEFT/RIGHT`); touching any manual control overrides Auto instantly |
+| **5. Clamp & Lift** | Slide & hold **Holder** UP to clamp tire, then **Jack** / **Jack & Holder** UP to lift chassis | `980/1420 Hz` warning siren sounds continuously; BNO055 guards tilt (`Warn 8°`, `Trip 15°`); release stops within `600 ms` |
+| **6. Emergency Abort** | Tap red **`STOP ALL`** / **`ESTOP`** or depress physical Mushroom switch | All wheel and actuator PWMs zero instantaneously and latch safe |
+
+### 9.4 Bench Calibration Checklist (`TESTING_GUIDE.md`)
+
+Before unassisted ground driving, operators follow the 14-step bench verification workflow in `TESTING_GUIDE.md` with **all four Mecanum wheels elevated on blocks** and **actuators unloaded**: verify `#,PING,#` `< 20 ms`, test `IDLE -> ARMED -> ESTOP` locks, jog Motors `1–4` at `50 PWM / 350 ms`, calibrate corner positions & polarity in `robot_config.yaml`, verify individual actuator pulses (`250 ms` lower / `300 ms` upper), center the lazy `D8` servo, confirm camera FPS & BNO055 `0x29` telemetry, and confirm watchdog cutoff (`450 ms` / `600 ms`) upon focus loss.
 
 ---
 
-## 9. Software Verification & Observed System Results
+## 10. Automated Testing, AI Benchmarks & Observed Verification Results
 
-Every safety guard, communication parser, kinematic mixer, vision heuristic, autonomous finite-state transition, and Android telemetry model is backed by repeatable automated tests and verified Raspberry Pi 3 hardware bring-up checks.
+All automated test suites reported below were executed cleanly against the final codebase state (`HEAD` including `RobotApiClient.kt` detection-schema normalization and camera-beside-servo UI redesigns):
 
-### 9.1 Automated Software Test Verification
-
-*(All automated suites reported below were executed cleanly against the final committed repository state with zero skipped or mocked-over assertions masking logic defects.)*
-
-| Suite / Tool | Scope Covered | Verified Outcome |
+| Verification Suite | Scope & Test Modules Executed | Verified Result (Observed) |
 | :--- | :--- | :--- |
-| **Python Backend `pytest` Suite** (`LiftMate-Control-Center/tests/`) | `test_protocol.py`, `test_serial.py`, `test_safety.py`, `test_motors.py`, `test_actuators.py`, `test_ai_vision.py`, `test_autonomous.py`, `test_simple_control.py` | **26 / 26 tests passed (`8.43 s`)** |
-| **Android Gradle Unit Tests** (`LiftMate-Android/app/src/test/`) | `RobotModelsTest`: `controlPayloadsClampSafetyLimitsCleanly`, `themePalettesExposeDistinctDarkAndLightModes`, `hostDiscoveryPrioritizesLastKnownCustomAndDefaultAp` | **3 / 3 tests passed (`0` failures, `0` skipped)** |
-| **Android APK Packaging** (`LiftMate-Control-Center/android/LiftMate-Control.apk`) | Gradle Android build & signed APK binary artifact | **`2.2 MB` APK verified (`BUILD SUCCESSFUL`)** |
+| **Backend Python `pytest` Suite** (`LiftMate-Control-Center/tests/`) | `test_actuators.py`, `test_ai_vision.py`, `test_autonomous.py`, `test_motors.py`, `test_protocol.py`, `test_safety.py`, `test_serial.py`, `test_simple_control.py` | **`26 / 26` tests passed in `5.17 s`** (`0` failures, `0` skipped) |
+| **Android Gradle Unit Tests** (`LiftMate-Android/app/src/test/`) | `RobotModelsTest`: `controlPayloadsClampSafetyLimitsCleanly`, `themePalettesExposeDistinctDarkAndLightModes`, `hostDiscoveryPrioritizesLastKnownCustomAndDefaultAp` | **`3 / 3` tests passed** (`0` failures, `0` skipped, `BUILD SUCCESSFUL in 18 s`) |
+| **Android APK Binary & Signature** (`LiftMate-Control.apk`) | Gradle `assembleDebug` + Android SDK `36.1.0` `apksigner verify` | **`2.2 MB` APK verified (`APK Signature Scheme v2: true`)** |
+| **Android Emulator End-to-End Integration** (`API 36` AVD + Local FastAPI + OpenCV DNN) | `adb reverse tcp:8000` live connection, MJPEG video, live AI detections (`CAR 99.7%`, `PERSON 82.6%`), Dark/Light switching, Fullscreen Camera + Servo, Autonomous `SCAN_ROTATE` transition, Offline Map & Actuators | **Verified visually across 7 live Android captures (`7.8–13.8 ms` dual-model CPU inference on host; `6.5 FPS` HUD)** |
+| **Web Control Center Validation** (`simple.html` & `/diagnostics` via Headless Chrome) | Live `10 Hz` WebSocket link (`/diagnostics`), AI HUD bounding boxes, beside-camera servo slider (`68°` POST), Qatar Satellite Car Pin `#1 Red Sedan` | **Verified visually across desktop (`1440×1020`) & compact (`680×1040`) captures** |
 
-### 9.2 Hardware-in-the-Loop Edge Bring-Up Observations
-
-During live integration testing on the physical **Raspberry Pi 3 + Arduino Mega 2560** target stack:
-* **Standalone Hotspot Association:** `liftmate-wifi.service` successfully suppressed `NetworkManager`/`wpa_supplicant` contention on `wlan0`, broadcasting `LiftMate` (`10.42.0.1`) and issuing DHCP leases (`10.42.0.10–200`) to mobile clients after power cycle.
-* **USB Serial Link Recovery:** Following physical USB reconnection between Raspberry Pi 3 and Mega 2560, `/dev/ttyUSB0` enumerated cleanly at `115200` baud, restoring responsive 4-wheel Mecanum drive control and dual actuator response.
-* **Offline Dual-Model CPU Vision Latency:** Live OpenCV DNN execution on the Raspberry Pi 3 quad-core ARM CPU running both `MobileNet-SSD` and `YOLOv4-tiny` recorded end-to-end analysis times between **`323.5 ms` and `739.9 ms`** on `320 × 240` frames, confirming the necessity of the `1.8 s` staleness threshold and `0.25 s` pre-turn brake latch inside `AutonomousController`.
+*(Verification boundary note: Host-side Android emulator and Headless Chrome validations executed with Mega 2560 in `SIMULATOR` serial mode and a `640×480` automotive service-bay test feed routed over the `:8081` camera-agent protocol. The target physical Raspberry Pi 3 hotspot `LiftMate` was offline/powered down during final report generation, so over-the-air deployment of the `RobotApiClient.kt` bounding-box parser fix and latest frontend files awaits powering on the robot.)*
 
 ---
 
-## 10. Engineering Limitations & Future Work
+## 11. Engineering Limitations & Future Roadmap
 
-Consistent with rigorous robotics reporting, several physical boundaries of the current hardware revision must be clearly noted:
-
-1. **Open-Loop Odometry Without Wheel Encoders or GPS:** `NavigationController` currently estimates relative displacement via kinematic drive dead-reckoning fused with BNO055 heading rather than closed-loop quadrature wheel encoders or outdoor RTK-GPS. Prolonged driving across slippery surfaces will accumulate pose drift over time.
-2. **CPU Vision Latency Ceiling:** While `323.5 ms–739.9 ms` CPU inference reliably supports low-speed workshop avoidance (`55–125 PWM`), higher-velocity outdoor navigation would benefit from hardware acceleration (e.g., Coral Edge TPU or Raspberry Pi 5 / Jetson Orin Nano) or ultrasonic/LiDAR rangefinder fusion to lower reaction latency below `50 ms`.
-3. **Actuator Position & Load Sensing:** The `8× 12 V` linear actuators rely on deterministic firmware time caps (`5,000 ms` lower / `10,000 ms` upper) rather than physical potentiometer/Hall-effect stroke encoders or inline current-shunt load cells. Adding closed-loop stroke feedback and INA219/ACS712 current monitoring will enable precise millimeter clamping control and real-time axle weight estimation.
-4. **Controlled Physical Lift & Endurance Characterization:** Future field validation phases should capture instrumentation curves (battery bus voltage sag under loaded 4-wheel simultaneous strafe + 4-actuator lift, temperature rise across BTS7960 heatsinks, and obstacle stopping distances across asphalt vs. epoxy garage surfaces).
+1. **Open-Loop Odometry vs. Closed-Loop Encoders:** `NavigationController` estimates local motion from commanded wheel vectors integrated with `BNO055` heading; prolonged driving over low-friction surfaces will accumulate pose drift until quadrature motor encoders or optical-flow sensors are fitted.
+2. **Physical Endurance & Battery Sag Telemetry:** Future field test logs should record full-load current draw (`ACS712` / `INA219` inline shunts on `12 V` motor & `upperJack` buses), BTS7960 thermal soak curves under maximum rated `50 N` vehicle load, and stopping distance characterization across concrete vs. wet asphalt.
+3. **Closed-Loop Actuator Stroke Limits:** Adding linear Hall-effect/potentiometer stroke feedback to `upperJack` (`100 mm`) and `lowerJack` (`30 mm`) will upgrade end-stop stopping from fixed time bounds (`10,000 ms` / `5,000 ms`) to millimeter-accurate leveling.
+4. **Hardware AI Acceleration & Depth Sensing:** Offloading DNN detection from Raspberry Pi 3 ARM cores onto a Neural Compute Stick / Coral Edge TPU or upgrading to a Pi 5 + ToF/ultrasonic proximity array would cut obstacle detection latency under `50 ms` and safely unlock Mode 3 (`AI_NAVIGATION`).
 
 ---
 
-## 11. Complete Repository Architecture & File Index
+## 12. Complete Repository Architecture & File Index
 
 ```text
 robotcar/
-├── README.md                                  # Project overview, quick-start & GitHub landing page
+├── README.md                                  # Quick-start, highlights & GitHub overview
 ├── docs/
-│   ├── LiftMate_Scientific_Research_Report.md # This full scientific & engineering research report
-│   └── figures/                               # 6 publication-grade 300 DPI technical diagrams
-│       ├── fig1_system_architecture.png
-│       ├── fig2_electrical_circuit_schematic.png
-│       ├── fig3_autonomous_safety_flowchart.png
-│       ├── fig4_mecanum_kinematics.png
-│       ├── fig5_ai_vision_pipeline.png
-│       └── fig6_mobile_app_workflow.png
-├── LiftMate-Control-Center/                   # Robot onboard FastAPI backend, firmware, UI & tools
-│   ├── android/LiftMate-Control.apk           # Pre-built signed Android APK (2.2 MB)
+│   ├── LiftMate_Scientific_Research_Report.md # This full scientific & engineering report
+│   ├── figures/                               # 6 publication-grade 300 DPI technical diagrams
+│   │   ├── fig1_system_architecture.png
+│   │   ├── fig2_electrical_circuit_schematic.png
+│   │   ├── fig3_autonomous_safety_flowchart.png
+│   │   ├── fig4_mecanum_kinematics.png
+│   │   ├── fig5_ai_vision_pipeline.png
+│   │   └── fig6_mobile_app_workflow.png
+│   └── screenshots/                           # 10 real rendered Android APK, AI Vision & Web UI captures
+│       ├── android_all_console_dark.png
+│       ├── android_autonomous_active.png
+│       ├── android_fit_cockpit_dark.png
+│       ├── android_fit_cockpit_light.png
+│       ├── android_fullscreen_cam_ai.png
+│       ├── android_actuators_telemetry_dark.png
+│       ├── android_live_map_dark.png
+│       ├── android_live_map_light.png
+│       ├── web_simple_compact.png
+│       └── web_engineering_dashboard.png
+├── LiftMate-Control-Center/                   # Robot onboard FastAPI backend, firmware & UI
+│   ├── android/LiftMate-Control.apk           # Pre-built v2-signed Android APK (2.2 MB)
 │   ├── backend/
-│   │   ├── pi_camera_agent.py                 # IMX219 CSI MJPEG streamer (port 8081)
-│   │   └── app/                               # FastAPI core: main, safety, motor, actuator, imu,
-│   │                                          # camera, ai_vision, autonomous, navigation, serial, servo
+│   │   ├── pi_camera_agent.py                 # High-speed V4L2 USB MJPEG streamer (:8081)
+│   │   └── app/                               # main, safety, motor, actuator, imu, camera,
+│   │                                          # ai_vision, autonomous, navigation, serial, servo, config, diagnostics
 │   ├── config/robot_config.yaml               # Verified pins, gains, IMU tilt & servo bounds
 │   ├── data/
 │   │   ├── maps/qatar_offline.mbtiles         # Offline SQLite regional map tiles (6.6 MB)
-│   │   ├── models/                            # MobileNet-SSD & YOLOv4-tiny weights/configs
-│   │   └── routes/liftmate_routes.db          # Car Repair Pin persistence database
+│   │   ├── models/                            # MobileNet-SSD (22 MB) & YOLOv4-tiny (23 MB)
+│   │   └── routes/liftmate_routes.db          # Persistent Car Repair Pin SQLite database
 │   ├── firmware/
 │   │   ├── RobotJackSafe/RobotJackSafe.ino    # Production Mega 2560 watchdog firmware
-│   │   └── Robot_jack_code_backup/            # Reference baseline firmware backup
-│   ├── frontend/                              # Web Control Center + offline Leaflet + /mobile-map
-│   ├── scripts/setup_pi_hotspot.sh            # Standalone hostapd + dnsmasq AP provisioner
-│   ├── tests/                                 # 8 automated pytest modules (26 tests)
-│   ├── install.sh / run.sh / requirements.txt # Deployment & runtime launch toolchain
-│   ├── TESTING_GUIDE.md / WIRING.md           # Step-by-step bench calibration & wiring guides
+│   │   └── Robot_jack_code_backup/            # Original reference firmware backup
+│   ├── frontend/                              # simple.html (/), index.html (/diagnostics),
+│   │                                          # mobile_map.html (/mobile-map), vendor/leaflet, css/, js/
+│   ├── scripts/setup_pi_hotspot.sh            # Persistent hostapd + dnsmasq AP provisioner
+│   ├── tests/                                 # 8 automated pytest suites (26 tests)
+│   ├── install.sh / run.sh / requirements.txt # Deployment & Python dependency definitions
+│   ├── TESTING_GUIDE.md / WIRING.md           # Step-by-step bench calibration & electrical guides
 └── LiftMate-Android/                          # Full Android Studio Kotlin project (com.liftmate.control)
     ├── build.gradle.kts / settings.gradle.kts # Gradle Kotlin DSL build definition
     └── app/src/
@@ -416,4 +408,4 @@ robotcar/
 ```
 
 ---
-*Compiled and verified from workspace source configuration, embedded C++ firmware, Python FastAPI controllers, Kotlin Android source code, and executed test suites.*
+*Compiled and verified directly from repository source files, C++ embedded firmware, FastAPI Python controllers, Kotlin Android codebase, executed test suites, Android API 36 emulator captures, and Chromium UI renders.*
