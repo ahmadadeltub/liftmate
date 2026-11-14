@@ -1,28 +1,28 @@
 /* LiftMate Advanced Robotic Control & Diagnostic Center - Professional Dark Navy UI */
 :root {
-  --bg-primary: #060b16;
-  --bg-secondary: #0c1426;
-  --bg-card: #111c33;
-  --bg-card-hover: #162442;
-  --bg-input: #091020;
-  --border-color: #1e3154;
-  --border-highlight: #00d4ff;
+  --bg-primary: #040814;
+  --bg-secondary: #0a1224;
+  --bg-card: rgba(15, 25, 48, 0.84);
+  --bg-card-hover: rgba(22, 36, 68, 0.92);
+  --bg-input: #080f20;
+  --border-color: rgba(56, 189, 248, 0.18);
+  --border-highlight: #00f0ff;
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --accent-cyan: #00d4ff;
-  --accent-blue: #2563eb;
-  --accent-blue-hover: #3b82f6;
+  --accent-cyan: #00f0ff;
+  --accent-blue: #3b82f6;
+  --accent-blue-hover: #60a5fa;
   --status-green: #10b981;
-  --status-green-bg: rgba(16, 185, 129, 0.14);
+  --status-green-bg: rgba(16, 185, 129, 0.16);
   --status-amber: #f59e0b;
-  --status-amber-bg: rgba(245, 158, 11, 0.15);
+  --status-amber-bg: rgba(245, 158, 11, 0.16);
   --status-red: #ef4444;
   --status-red-bg: rgba(239, 68, 68, 0.18);
-  --radius-lg: 12px;
-  --radius-md: 8px;
-  --radius-sm: 6px;
-  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.42);
+  --radius-lg: 16px;
+  --radius-md: 10px;
+  --radius-sm: 7px;
+  --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 * {

@@ -100,3 +100,44 @@ def test_camera_unavailable_and_empty_frame_handling() -> None:
     st = system.ai_vision.process_frame(np.array([]), run_yolo_supplement=False)
     assert st["vision_status"] == "CAMERA VISION UNAVAILABLE"
     assert st["active_warning"] == "CAMERA VISION UNAVAILABLE"
+
+
+def test_structural_wall_detection_and_open_corridor(monkeypatch) -> None:
+    """Verifies unlabeled solid walls are detected and open corridor heading is found."""
+    monkeypatch.setattr(system.ai_vision, "_run_mobilenet_ssd", lambda frame: ([], False))
+    monkeypatch.setattr(system.ai_vision, "_run_yolov4_tiny", lambda frame: ([], False))
+
+    # Build a synthetic camera view: clean gray floor ahead + solid wall blocking CENTER/RIGHT,
+    # leaving LEFT [0..115px] as a clear open corridor to steer into.
+    frame = np.zeros((240, 320, 3), dtype=np.uint8)
+    # Upper far horizon
+    frame[:105, :, :] = (135, 115, 95)
+    # Clean open floor in lower half with subtle noise
+    rng = np.random.default_rng(42)
+    floor_tex = rng.integers(-4, 5, size=(135, 320, 3), dtype=np.int16)
+    base_floor = np.full((135, 320, 3), (125, 128, 130), dtype=np.int16)
+    frame[105:, :, :] = np.clip(base_floor + floor_tex, 0, 255).astype(np.uint8)
+    # Paint solid colored wall with baseboard seam blocking CENTER & RIGHT down to y=208
+    frame[28:204, 112:318, :] = (48, 82, 168)
+    frame[200:208, 112:318, :] = (20, 30, 50)
+
+    system.ai_vision._prev_corridor_scores = None
+    st = system.ai_vision.process_frame(frame, run_yolo_supplement=False)
+    assert st["wall_detected"] is True
+    assert any(d["category"] in ("WALL", "BARRIER") for d in st["detections"])
+    assert st["regions"]["CENTER"]["blocked"] is True
+    assert st["regions"]["RIGHT"]["blocked"] is True
+    assert st["best_heading"] < -0.20
+    assert st["corridor_scores"][0] > st["corridor_scores"][7]
+
+    # Now test a flush close-up blank wall filling the lens with subtle illumination gradient
+    grad_x = np.linspace(185, 206, 320, dtype=np.float32)[None, :]
+    grad_y = np.linspace(192, 198, 240, dtype=np.float32)[:, None]
+    wall_flush = np.stack([grad_x * 0.5 + grad_y * 0.5] * 3, axis=-1).clip(0, 255).astype(np.uint8)
+
+    system.ai_vision._prev_corridor_scores = None
+    st_flush = system.ai_vision.process_frame(wall_flush, run_yolo_supplement=False)
+    assert st_flush["wall_detected"] is True
+    assert st_flush["regions"]["CENTER"]["blocked"] is True
+    assert st_flush["open_space_ratio"] < 0.35
+    assert st_flush["recommended_path"] == "RETREAT_ROTATE"

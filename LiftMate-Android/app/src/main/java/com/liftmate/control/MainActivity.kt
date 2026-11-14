@@ -1073,11 +1073,14 @@ class MainActivity : ComponentActivity() {
         }
 
         val auto = tel.autonomous
+        val ai = tel.aiVision
+        val openPct = (ai.openSpaceRatio * 100f).roundToInt().coerceIn(0, 100)
+        val wallTag = if (ai.wallDetected) " • WALL DETECTED" else ""
         if (auto.enabled) {
             cardAutonomous.background = palette.autoCardOnDrawable()
             tvAutoTitle.text = "AUTONOMOUS: ${auto.action}"
             tvAutoTitle.setTextColor(palette.emerald)
-            tvAutoReason.text = auto.reason
+            tvAutoReason.text = "${auto.reason} (Open $openPct%$wallTag)"
             tvAutoReason.setTextColor(palette.textSecondary)
             btnToggleAutonomous.background = palette.gradientPillDrawable("#10B981", "#059669", "#80A7F3D0")
             btnToggleAutonomous.setTextColor(Color.WHITE)
@@ -1090,7 +1093,7 @@ class MainActivity : ComponentActivity() {
             cardAutonomous.background = palette.cardDrawable()
             tvAutoTitle.text = "MANUAL CONTROL"
             tvAutoTitle.setTextColor(palette.textPrimary)
-            tvAutoReason.text = auto.reason.ifBlank { "Tap Activate Auto for obstacle-avoiding autonomous driving" }
+            tvAutoReason.text = auto.reason.ifBlank { "Tap Activate Auto for smart wall & corridor navigation" }
             tvAutoReason.setTextColor(palette.textSecondary)
             btnToggleAutonomous.background = palette.pillDrawable()
             btnToggleAutonomous.setTextColor(palette.textPrimary)
@@ -1101,8 +1104,6 @@ class MainActivity : ComponentActivity() {
                 text = "ACTIVATE AUTO"
             }
         }
-
-        val ai = tel.aiVision
         btnAiToggle.background = if (ai.enabled) {
             palette.gradientPillDrawable("#06B6D4", "#4F46E5", "#99BAE6FD")
         } else {
@@ -1285,28 +1286,71 @@ class MainActivity : ComponentActivity() {
 
         val controlsBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(20, 20, 20, 20)
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dpToPx(14), dpToPx(12), dpToPx(14), dpToPx(34))
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(controlsBar) { v, insets ->
+            val sysBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(
+                dpToPx(14) + sysBars.left,
+                dpToPx(12),
+                dpToPx(14) + sysBars.right,
+                dpToPx(18) + sysBars.bottom,
+            )
+            insets
         }
         val autoBtn = Button(this).apply {
             text = if (lastTelemetry.autonomous.enabled) "AUTO ON: ${lastTelemetry.autonomous.action}" else "ACTIVATE AUTO"
             setTextColor(Color.WHITE)
+            textSize = 11.5f
+            isSingleLine = true
+            minWidth = 0
+            minimumWidth = 0
+            minHeight = 0
+            minimumHeight = 0
+            gravity = android.view.Gravity.CENTER
+            setPadding(dpToPx(14), 0, dpToPx(14), 0)
             setBackgroundResource(if (lastTelemetry.autonomous.enabled) R.drawable.bg_pill_active_green else R.drawable.bg_pill_button)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                dpToPx(40),
+            )
             setOnClickListener { toggleAutonomousMode() }
         }
         val stopBtn = Button(this).apply {
             text = "STOP ALL"
             setTextColor(Color.WHITE)
+            textSize = 11.5f
+            isSingleLine = true
+            minWidth = 0
+            minimumWidth = 0
+            minHeight = 0
+            minimumHeight = 0
+            gravity = android.view.Gravity.CENTER
+            setPadding(dpToPx(14), 0, dpToPx(14), 0)
             setBackgroundResource(R.drawable.bg_stop_button)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+                dpToPx(40),
             ).apply { marginEnd = dpToPx(8) }
             setOnClickListener { triggerEmergencyStopAll() }
         }
         val exitBtn = Button(this).apply {
             text = "CLOSE"
             setTextColor(Color.WHITE)
+            textSize = 11.5f
+            isSingleLine = true
+            minWidth = 0
+            minimumWidth = 0
+            minHeight = 0
+            minimumHeight = 0
+            gravity = android.view.Gravity.CENTER
+            setPadding(dpToPx(14), 0, dpToPx(14), 0)
             setBackgroundResource(R.drawable.bg_pill_button)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                dpToPx(40),
+            )
             setOnClickListener { dialog.dismiss() }
         }
         val spacer = View(this).apply {

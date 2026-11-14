@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.DashPathEffect
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
@@ -66,6 +67,23 @@ class CameraOverlayView @JvmOverloads constructor(
         textSize = 22f
         isFakeBoldText = true
     }
+    private val corridorBarPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+    }
+    private val pathCurvePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 5f
+        strokeCap = Paint.Cap.ROUND
+        color = Color.parseColor("#00F0FF")
+    }
+    private val pathNodePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = Color.parseColor("#00F0FF")
+    }
+    private val boxFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+    }
+    private val guidancePath = Path()
 
     fun updateFrame(bitmap: Bitmap?) {
         frameBitmap = bitmap
@@ -123,29 +141,87 @@ class CameraOverlayView @JvmOverloads constructor(
                 canvas.drawText(shortLabel, boxRect.centerX(), boxRect.centerY() + 7f, zoneTextPaint)
             }
 
-            // Bounding boxes
+            // Free-space 9-bin floor corridor heatmap + glowing cyan steering path curve
+            val corridor = aiSnapshot.corridorScores
+            if (corridor.size >= 3) {
+                val nBins = corridor.size
+                val binW = dw / nBins.toFloat()
+                val barTop = dy + dh * 0.78f
+                val barBottom = barTop + 11f
+                for (i in 0 until nBins) {
+                    val s = corridor[i].coerceIn(0f, 1f)
+                    corridorBarPaint.color = when {
+                        s >= 0.68f -> Color.argb(175, 16, 185, 129)
+                        s >= 0.40f -> Color.argb(190, 245, 158, 11)
+                        else -> Color.argb(205, 239, 68, 68)
+                    }
+                    val leftB = dx + i * binW + 3f
+                    val rightB = dx + (i + 1) * binW - 3f
+                    canvas.drawRoundRect(leftB, barTop, rightB, barBottom, 4f, 4f, corridorBarPaint)
+                }
+
+                val hClamped = aiSnapshot.bestHeading.coerceIn(-1f, 1f)
+                val startX = dx + dw * 0.5f
+                val startY = dy + dh * 0.88f
+                val ctrlY = dy + dh * 0.72f
+                val endX = dx + (0.5f + hClamped * 0.42f) * dw
+                val endY = dy + dh * 0.56f
+                guidancePath.reset()
+                guidancePath.moveTo(startX, startY)
+                guidancePath.quadTo(startX, ctrlY, endX, endY)
+                canvas.drawPath(guidancePath, pathCurvePaint)
+                canvas.drawCircle(endX, endY, 8f, pathNodePaint)
+
+                val openPct = (aiSnapshot.openSpaceRatio * 100f).toInt().coerceIn(0, 100)
+                val pathBadge = "OPEN $openPct% · ${aiSnapshot.recommendedPath}"
+                val pW = zoneTextPaint.measureText(pathBadge) + 20f
+                val badgeLeft = (dx + (dw - pW) * 0.5f).coerceIn(dx + 8f, (dx + dw - pW - 8f).coerceAtLeast(dx + 8f))
+                val badgeBottom = (barTop - 8f).coerceAtLeast(dy + 68f)
+                val badgeTop = badgeBottom - 30f
+                tagBgPaint.color = Color.argb(195, 6, 11, 23)
+                canvas.drawRoundRect(badgeLeft, badgeTop, badgeLeft + pW, badgeBottom, 10f, 10f, tagBgPaint)
+                zoneTextPaint.textAlign = Paint.Align.LEFT
+                canvas.drawText(pathBadge, badgeLeft + 10f, badgeBottom - 8f, zoneTextPaint)
+                zoneTextPaint.textAlign = Paint.Align.CENTER
+            }
+
+            // Corner-reticle bounding boxes (including WALL / BARRIER structural obstacles)
             for (det in aiSnapshot.detections) {
                 if (det.bboxNorm.size < 4) continue
                 val x1 = dx + det.bboxNorm[0].coerceIn(0f, 1f) * dw
                 val y1 = dy + det.bboxNorm[1].coerceIn(0f, 1f) * dh
                 val x2 = dx + det.bboxNorm[2].coerceIn(0f, 1f) * dw
                 val y2 = dy + det.bboxNorm[3].coerceIn(0f, 1f) * dh
-                val col = if (det.label.equals("person", ignoreCase = true)) {
-                    Color.parseColor("#EF4444")
-                } else if (det.isCar) {
-                    Color.parseColor("#F59E0B")
-                } else {
-                    Color.parseColor("#00F0FF")
+                val col = when {
+                    det.isWall -> Color.parseColor("#F97316")
+                    det.label.equals("person", ignoreCase = true) -> Color.parseColor("#EF4444")
+                    det.isCar -> Color.parseColor("#F59E0B")
+                    else -> Color.parseColor("#00F0FF")
                 }
-                boxPaint.color = col
+                boxFillPaint.color = Color.argb(if (det.isWall) 36 else 22, Color.red(col), Color.green(col), Color.blue(col))
                 boxRect.set(x1, y1, x2, y2)
-                canvas.drawRoundRect(boxRect, 8f, 8f, boxPaint)
+                canvas.drawRoundRect(boxRect, 8f, 8f, boxFillPaint)
+
+                boxPaint.color = col
+                val cornerLen = minOf(x2 - x1, y2 - y1).times(0.26f).coerceIn(12f, 28f)
+                // Top-left bracket
+                canvas.drawLine(x1, y1 + cornerLen, x1, y1, boxPaint)
+                canvas.drawLine(x1, y1, x1 + cornerLen, y1, boxPaint)
+                // Top-right bracket
+                canvas.drawLine(x2 - cornerLen, y1, x2, y1, boxPaint)
+                canvas.drawLine(x2, y1, x2, y1 + cornerLen, boxPaint)
+                // Bottom-left bracket
+                canvas.drawLine(x1, y2 - cornerLen, x1, y2, boxPaint)
+                canvas.drawLine(x1, y2, x1 + cornerLen, y2, boxPaint)
+                // Bottom-right bracket
+                canvas.drawLine(x2 - cornerLen, y2, x2, y2, boxPaint)
+                canvas.drawLine(x2, y2, x2, y2 - cornerLen, boxPaint)
 
                 val pct = (det.confidence * 100.0).toInt()
                 val label = "${det.label} $pct%"
                 val textW = tagTextPaint.measureText(label) + 14f
                 val tagTop = (y1 - 30f).coerceAtLeast(dy + 34f)
-                tagBgPaint.color = Color.argb(200, 15, 23, 42)
+                tagBgPaint.color = Color.argb(215, 10, 17, 32)
                 canvas.drawRoundRect(x1, tagTop, x1 + textW, tagTop + 26f, 6f, 6f, tagBgPaint)
                 canvas.drawText(label, x1 + 7f, tagTop + 19f, tagTextPaint)
             }

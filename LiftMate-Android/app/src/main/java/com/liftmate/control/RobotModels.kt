@@ -16,6 +16,7 @@ data class DetectionBox(
     val bboxNorm: List<Float>, // [x1, y1, x2, y2] in 0..1
     val region: String,
     val isCar: Boolean = false,
+    val isWall: Boolean = false,
 )
 
 data class AiVisionSnapshot(
@@ -28,6 +29,11 @@ data class AiVisionSnapshot(
     val detections: List<DetectionBox> = emptyList(),
     val personCount: Int = 0,
     val carCount: Int = 0,
+    val corridorScores: List<Float> = emptyList(),
+    val bestHeading: Float = 0f,
+    val openSpaceRatio: Float = 1f,
+    val wallDetected: Boolean = false,
+    val recommendedPath: String = "FORWARD",
 )
 
 data class AutonomousSnapshot(

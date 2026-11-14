@@ -54,4 +54,21 @@ class RobotModelsTest {
         assertEquals(false, ThemePalettes.DARK.isLight)
         assertEquals(true, ThemePalettes.LIGHT.isLight)
     }
+
+    @Test
+    fun aiVisionSnapshotTracksWallsAndCorridors() {
+        val snap = AiVisionSnapshot(
+            enabled = true,
+            corridorScores = listOf(0.9f, 0.85f, 0.2f),
+            bestHeading = -0.6f,
+            openSpaceRatio = 0.65f,
+            wallDetected = true,
+            recommendedPath = "VEER_LEFT",
+            detections = listOf(DetectionBox("WALL", 0.92, listOf(0.5f, 0.2f, 0.95f, 0.9f), "RIGHT", isWall = true)),
+        )
+        assertEquals(true, snap.wallDetected)
+        assertEquals(-0.6f, snap.bestHeading, 0.001f)
+        assertEquals("VEER_LEFT", snap.recommendedPath)
+        assertEquals(true, snap.detections.first().isWall)
+    }
 }

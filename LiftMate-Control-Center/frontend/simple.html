@@ -10,35 +10,39 @@
   <style>
     /* ==================== MODERN AI DARK & LIGHT THEMES ==================== */
     :root[data-theme="dark"] {
-      --bg-outer: #03050a;
-      --bg-app: radial-gradient(circle at 50% 0%, #111a36 0%, #060913 65%);
-      --bg-card: rgba(20, 30, 58, 0.68);
-      --bg-track: rgba(8, 13, 26, 0.88);
-      --border-glass: rgba(99, 102, 241, 0.26);
-      --border-subtle: rgba(255, 255, 255, 0.09);
-      --text-main: #ffffff;
+      --bg-outer: #020409;
+      --bg-app: radial-gradient(circle at 18% 0%, rgba(0, 240, 255, 0.14) 0%, transparent 42%),
+                radial-gradient(circle at 86% 6%, rgba(99, 102, 241, 0.16) 0%, transparent 45%),
+                linear-gradient(180deg, #0b1328 0%, #050914 68%, #03060d 100%);
+      --bg-card: rgba(16, 26, 52, 0.72);
+      --bg-track: rgba(6, 11, 23, 0.90);
+      --border-glass: rgba(99, 179, 237, 0.28);
+      --border-subtle: rgba(255, 255, 255, 0.10);
+      --text-main: #f8fafc;
       --text-sub: #94a3b8;
-      --accent-gradient: linear-gradient(135deg, #00f0ff 0%, #6366f1 100%);
+      --accent-gradient: linear-gradient(135deg, #00f0ff 0%, #3b82f6 52%, #6366f1 100%);
       --servo-gradient: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-      --shadow-shell: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 44px rgba(99, 102, 241, 0.14);
-      --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.32);
-      --btn-surface: rgba(30, 41, 69, 0.78);
+      --shadow-shell: 0 28px 70px rgba(0, 0, 0, 0.85), 0 0 56px rgba(0, 240, 255, 0.12);
+      --shadow-card: 0 10px 28px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      --btn-surface: rgba(26, 38, 68, 0.82);
     }
 
     :root[data-theme="light"] {
-      --bg-outer: #dfe7f2;
-      --bg-app: radial-gradient(circle at 50% 0%, #ffffff 0%, #eef2f8 70%);
-      --bg-card: rgba(255, 255, 255, 0.92);
+      --bg-outer: #dce6f5;
+      --bg-app: radial-gradient(circle at 20% 0%, rgba(37, 99, 235, 0.10) 0%, transparent 45%),
+                radial-gradient(circle at 85% 6%, rgba(124, 58, 237, 0.10) 0%, transparent 48%),
+                linear-gradient(180deg, #ffffff 0%, #f1f6fd 65%, #e5eef9 100%);
+      --bg-card: rgba(255, 255, 255, 0.88);
       --bg-track: #e2e8f0;
-      --border-glass: rgba(99, 102, 241, 0.2);
-      --border-subtle: rgba(15, 23, 42, 0.08);
+      --border-glass: rgba(59, 130, 246, 0.24);
+      --border-subtle: rgba(15, 23, 42, 0.09);
       --text-main: #0f172a;
-      --text-sub: #64748b;
-      --accent-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      --text-sub: #475569;
+      --accent-gradient: linear-gradient(135deg, #0284c7 0%, #2563eb 55%, #7c3aed 100%);
       --servo-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-      --shadow-shell: 0 20px 50px rgba(15, 23, 42, 0.14);
-      --shadow-card: 0 8px 20px rgba(15, 23, 42, 0.06);
-      --btn-surface: #f1f5f9;
+      --shadow-shell: 0 24px 60px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      --shadow-card: 0 10px 24px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      --btn-surface: rgba(241, 245, 249, 0.94);
     }
 
     * {
@@ -80,6 +84,7 @@
         max(10px, env(safe-area-inset-bottom));
       box-shadow: var(--shadow-shell);
       overflow: hidden;
+      min-width: 0;
     }
 
     @media (min-width: 520px) and (min-height: 700px) {
@@ -93,9 +98,12 @@
     /* ==================== MINIMAL HEADER ==================== */
     .top-bar {
       flex: 0 0 auto;
+      width: 100%;
+      min-width: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 6px;
       padding: 2px 2px;
     }
 
@@ -103,6 +111,8 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
+      flex: 1 1 auto;
     }
 
     .brand-icon {
@@ -121,8 +131,81 @@
 
     .brand-title {
       font-size: clamp(16px, 2.3dvh, 20px);
+      font-weight: 850;
+      letter-spacing: -0.4px;
+      line-height: 1.05;
+    }
+
+    .brand-sub {
+      display: block;
+      font-size: 9px;
       font-weight: 800;
-      letter-spacing: -0.3px;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+    }
+
+    .pro-link-btn {
+      height: clamp(32px, 4.4dvh, 38px);
+      padding: 0 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      color: var(--text-sub);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .pro-link-btn:hover {
+      border-color: var(--border-glass);
+      color: var(--text-main);
+    }
+
+    .auto-telemetry-bar {
+      width: 100%;
+      min-width: 0;
+      overflow: hidden;
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: var(--bg-track);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+    #autoReasonText {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .auto-telemetry-bar.active {
+      border-color: rgba(16, 185, 129, 0.55);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(6, 182, 212, 0.10));
+      color: var(--text-main);
+    }
+    .auto-tele-badge {
+      font-size: 9.5px;
+      font-weight: 900;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.18);
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+    .auto-telemetry-bar.active .auto-tele-badge {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
     }
 
     .top-actions {
@@ -189,6 +272,8 @@
     /* ==================== RESPONSIVE CONTENT GRID ==================== */
     .main-stack {
       flex: 1 1 auto;
+      width: 100%;
+      min-width: 0;
       min-height: 0;
       display: flex;
       flex-direction: column;
@@ -304,11 +389,12 @@
       position: absolute;
       top: 5px;
       left: 6px;
+      max-width: 56%;
       z-index: 18;
-      background: rgba(6, 10, 22, 0.52);
+      background: rgba(6, 10, 22, 0.58);
       backdrop-filter: blur(5px);
       -webkit-backdrop-filter: blur(5px);
-      border: 1px solid rgba(0, 240, 255, 0.22);
+      border: 1px solid rgba(0, 240, 255, 0.24);
       border-radius: 7px;
       padding: 2px 6px;
       font-size: 7px;
@@ -316,12 +402,15 @@
       font-weight: 700;
       color: #e2e8f0;
       pointer-events: none;
+      overflow: hidden;
     }
     .ai-cam-hud .ai-hud-row {
       display: flex;
       align-items: center;
       gap: 4px;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .ai-cam-hud .ai-val {
       color: #00f0ff;
@@ -405,7 +494,7 @@
       right: 6px;
       z-index: 18;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 3px;
       pointer-events: none;
     }
@@ -517,17 +606,20 @@
     .map-actions-row {
       width: 100%;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
     }
 
     .map-pill-btn {
-      padding: 8px 6px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 8px 4px;
       border-radius: 12px;
       border: 1px solid var(--border-subtle);
       background: var(--btn-surface);
       color: var(--text-main);
-      font-size: clamp(10.5px, 1.45dvh, 12px);
+      font-size: clamp(10px, 1.35dvh, 11.5px);
       font-weight: 800;
       cursor: pointer;
       text-align: center;
@@ -742,6 +834,8 @@
     /* ==================== GLASS CARDS ==================== */
     .glass-section {
       flex: 0 0 auto;
+      width: 100%;
+      min-width: 0;
       background: var(--bg-card);
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
@@ -1107,9 +1201,13 @@
     <header class="top-bar">
       <div class="brand">
         <div class="brand-icon">LM</div>
-        <span class="brand-title">LiftMate</span>
+        <div>
+          <span class="brand-title">LiftMate</span>
+          <span class="brand-sub">AI Pilot · Mecanum</span>
+        </div>
       </div>
       <div class="top-actions">
+        <a href="/diagnostics" class="pro-link-btn" title="Open Pro 10-Panel Diagnostics">Pro</a>
         <button class="theme-btn" onclick="toggleTheme()" title="Light / Dark Mode">
           <span id="themeIcon">☀️</span>
         </button>
@@ -1132,10 +1230,11 @@
               <span>AI:<b class="ai-val" id="aiHudState">ON</b></span>
               <span>CARS:<b class="ai-val" id="aiHudCars">0</b></span>
               <span>OBS:<b class="ai-val" id="aiHudObstacles">0</b></span>
+              <span>OPEN:<b class="ai-val" id="aiHudOpenRatio">100%</b></span>
               <span>FPS:<b class="ai-val" id="aiHudFps">0.0</b></span>
             </div>
             <div class="ai-hud-row">
-              <span>VISION:<b class="ai-val" id="aiHudVisionStatus">CLEAR</b></span>
+              <span>PATH:<b class="ai-val" id="aiHudVisionStatus">CLEAR</b></span>
             </div>
           </div>
 
@@ -1223,7 +1322,7 @@
           </button>
         </div>
 
-        <div class="map-actions-row" style="grid-template-columns: 1.3fr 1fr;">
+        <div class="map-actions-row" style="grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);">
           <button class="map-pill-btn repaired-btn" id="btnCarRepaired" onclick="window.liftmateMap && window.liftmateMap.markLatestCarRepaired()">
             ✅ Car Repaired (Sustainability)
           </button>
@@ -1241,6 +1340,10 @@
             <button class="auto-mode-btn" id="btnAutoMode" onclick="toggleAutonomousMode()" title="Switch between Autonomous Obstacle Avoidance and Manual control">🤖 MANUAL</button>
             <span class="speed-badge" id="wheelSpeedBadge">Speed 55%</span>
           </div>
+        </div>
+        <div class="auto-telemetry-bar" id="autoTelemetryBar">
+          <span id="autoReasonText">Manual drive ready — 360° holonomic mode</span>
+          <span class="auto-tele-badge" id="autoActionBadge">MANUAL</span>
         </div>
 
         <div class="omni-circle-outer" id="omniCircle">
@@ -1882,6 +1985,15 @@
         camBtn.classList.toggle("auto-active", autonomousEnabled);
         camBtn.classList.remove("locked");
       }
+
+      const teleBar = document.getElementById("autoTelemetryBar");
+      const teleReason = document.getElementById("autoReasonText");
+      const teleBadge = document.getElementById("autoActionBadge");
+      if (teleBar) teleBar.classList.toggle("active", autonomousEnabled);
+      if (teleBadge) teleBadge.textContent = autonomousEnabled ? action : "MANUAL";
+      if (teleReason) {
+        teleReason.textContent = autoState.reason || (autonomousEnabled ? "Smart corridor navigation active" : "Manual drive ready — 360° holonomic mode");
+      }
     }
 
     async function toggleAutonomousMode() {
@@ -1919,6 +2031,7 @@
       const carsEl = document.getElementById("aiHudCars");
       const vehEl = document.getElementById("aiHudVehicles");
       const obsEl = document.getElementById("aiHudObstacles");
+      const openEl = document.getElementById("aiHudOpenRatio");
       const visEl = document.getElementById("aiHudVisionStatus");
 
       if (stateEl) {
@@ -1934,9 +2047,22 @@
         obsEl.textContent = `${ai.obstacle_count || 0}`;
         obsEl.className = "ai-val " + ((ai.obstacle_count || 0) > 0 ? "warn" : "");
       }
+      if (openEl) {
+        const openPct = Math.round((Number(ai.open_space_ratio ?? 1.0)) * 100);
+        openEl.textContent = `${openPct}%`;
+        openEl.className = "ai-val " + (openPct < 35 ? "crit" : openPct < 60 ? "warn" : "");
+      }
       if (visEl) {
         const rawVis = ai.vision_status || "READY";
-        visEl.textContent = rawVis === "CLEAR CAMERA REGION" ? "CLEAR" : rawVis;
+        let shortVis = rawVis
+          .replace("CLEAR CAMERA REGION", "CLEAR")
+          .replace("POTENTIAL OBSTACLE – STOP", "STOP OBSTACLE")
+          .replace("POTENTIAL OBSTACLE AHEAD", "OBS AHEAD")
+          .replace("POTENTIAL OBSTACLE ON LEFT", "OBS LEFT")
+          .replace("POTENTIAL OBSTACLE ON RIGHT", "OBS RIGHT")
+          .replace("UNKNOWN / UNRELIABLE DETECTION", "UNCERTAIN");
+        const pathHint = ai.recommended_path && ai.recommended_path !== "FORWARD" ? ` → ${ai.recommended_path}` : "";
+        visEl.textContent = shortVis + pathHint;
         visEl.className =
           "ai-val " +
           (ai.warning_level === "CRITICAL" ? "crit" : ai.warning_level === "WARNING" ? "warn" : "");
@@ -2030,7 +2156,41 @@
       tintZone(regs.CENTER, xLeft, xRight - xLeft);
       tintZone(regs.RIGHT, xRight, w - xRight);
 
-      // 2. Draw bounding boxes, labels, and confidence percentages
+      // 1b. Render 9-column Free-Space Corridor Clearance Strip & Target Vector Arrow
+      const corridor = aiVisionState.corridor_scores;
+      if (Array.isArray(corridor) && corridor.length >= 3) {
+        const nBins = corridor.length;
+        const binW = w / nBins;
+        const stripY = Math.round(h * 0.72);
+        const stripH = 5;
+        for (let c = 0; c < nBins; c++) {
+          const s = Math.max(0, Math.min(1, Number(corridor[c] ?? 1)));
+          ctx.fillStyle = s >= 0.68
+            ? "rgba(16, 185, 129, 0.62)"
+            : s >= 0.40
+            ? "rgba(245, 158, 11, 0.72)"
+            : "rgba(239, 68, 68, 0.80)";
+          ctx.fillRect(Math.round(c * binW) + 1, stripY, Math.max(4, Math.round(binW) - 2), stripH);
+        }
+        const heading = Math.max(-1, Math.min(1, Number(aiVisionState.best_heading ?? 0)));
+        const targetX = Math.round((0.5 + heading * 0.42) * w);
+        const startX = Math.round(w * 0.5);
+        const startY = Math.round(h * 0.80);
+        const tipY = Math.round(h * 0.56);
+        ctx.strokeStyle = "#00f0ff";
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.quadraticCurveTo(startX, Math.round(h * 0.68), targetX, tipY);
+        ctx.stroke();
+
+        ctx.fillStyle = "#00f0ff";
+        ctx.beginPath();
+        ctx.arc(targetX, tipY, 3.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 2. Draw modern corner-reticle bounding boxes & confidence pills
       const dets = aiVisionState.detections || [];
       ctx.font = "bold 8px -apple-system, BlinkMacSystemFont, sans-serif";
       for (let i = 0; i < dets.length; i++) {
@@ -2043,26 +2203,38 @@
         const bw = Math.max(12, bx2 - bx1);
         const bh = Math.max(12, by2 - by1);
         const color = d.color || "#00f0ff";
+        const corner = Math.max(6, Math.min(14, Math.round(Math.min(bw, bh) * 0.28)));
 
-        // Bounding box
+        // Subtle fill tint inside detected box
+        ctx.fillStyle = (d.category === "WALL" || d.category === "BARRIER")
+          ? "rgba(249, 115, 22, 0.14)"
+          : "rgba(0, 240, 255, 0.08)";
+        ctx.fillRect(bx1, by1, bw, bh);
+
+        // Sleek corner brackets
         ctx.strokeStyle = color;
-        ctx.lineWidth = d.visual_risk === "HIGH" ? 2.0 : 1.4;
-        ctx.strokeRect(bx1, by1, bw, bh);
+        ctx.lineWidth = d.visual_risk === "HIGH" ? 2.2 : 1.6;
+        ctx.beginPath();
+        ctx.moveTo(bx1, by1 + corner); ctx.lineTo(bx1, by1); ctx.lineTo(bx1 + corner, by1);
+        ctx.moveTo(bx1 + bw - corner, by1); ctx.lineTo(bx1 + bw, by1); ctx.lineTo(bx1 + bw, by1 + corner);
+        ctx.moveTo(bx1, by1 + bh - corner); ctx.lineTo(bx1, by1 + bh); ctx.lineTo(bx1 + corner, by1 + bh);
+        ctx.moveTo(bx1 + bw - corner, by1 + bh); ctx.lineTo(bx1 + bw, by1 + bh); ctx.lineTo(bx1 + bw, by1 + bh - corner);
+        ctx.stroke();
 
-        // Label text: e.g. "CAR – 94%"
+        // Label pill
         const label = d.display_label || `${d.category} – ${Math.round(d.confidence || 0)}%`;
-        const textW = ctx.measureText(label).width + 6;
-        const pillH = 11;
+        const textW = ctx.measureText(label).width + 8;
+        const pillH = 12;
         const pillY = by1 >= pillH + 2 ? by1 - pillH : by1;
 
-        ctx.fillStyle = "rgba(6, 10, 22, 0.72)";
+        ctx.fillStyle = "rgba(6, 10, 22, 0.80)";
         ctx.fillRect(bx1, pillY, textW, pillH);
         ctx.strokeStyle = color;
         ctx.lineWidth = 0.8;
         ctx.strokeRect(bx1, pillY, textW, pillH);
 
         ctx.fillStyle = color;
-        ctx.fillText(label, bx1 + 3, pillY + 8.5);
+        ctx.fillText(label, bx1 + 4, pillY + 9);
       }
       ctx.restore();
     }

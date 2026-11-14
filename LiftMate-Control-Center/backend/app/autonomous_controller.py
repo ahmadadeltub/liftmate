@@ -22,7 +22,8 @@ DEFAULT_AUTO_SPEED_PWM = 90
 CONTROL_INTERVAL_S = 0.10
 MAX_CAMERA_FRAME_AGE_S = 1.8
 BRAKE_HOLD_S = 0.25
-TURN_LATCH_S = 0.60
+TURN_LATCH_S = 0.65
+RETREAT_HOLD_S = 0.70
 MAX_SCAN_ROTATE_S = 2.50
 
 
@@ -73,8 +74,12 @@ class AutonomousController:
         self._turn_latch_dir: str = ""
         self._turn_latch_until: float = 0.0
         self._brake_until: float = 0.0
+        self._retreat_until: float = 0.0
+        self._retreat_cycles: int = 0
         self._scan_started_ts: float = 0.0
         self._was_forward: bool = False
+        self._last_open_heading: float = 0.0
+        self._last_open_ts: float = 0.0
 
         self.safety.register_estop_callback(self._on_safety_estop)
 
@@ -96,8 +101,12 @@ class AutonomousController:
         self._turn_latch_dir = ""
         self._turn_latch_until = 0.0
         self._brake_until = 0.0
+        self._retreat_until = 0.0
+        self._retreat_cycles = 0
         self._scan_started_ts = 0.0
         self._was_forward = False
+        self._last_open_heading = 0.0
+        self._last_open_ts = 0.0
 
     def _stop_wheels(self, reason: str, action: str) -> None:
         self.motors.stop_all_wheels()
@@ -266,16 +275,39 @@ class AutonomousController:
         if left_score < 0 or center_score < 0 or right_score < 0:
             return "PAUSED_UNCERTAIN", "Region confidence unknown; stopping safely", 0.0, 0.0, 0.0
 
-        # Active obstacle straight ahead -> brake briefly then rotate away
+        # Extract continuous corridor free-space profile & wall cues when supplied
+        raw_corridor = ai_status.get("corridor_scores")
+        has_corridor = isinstance(raw_corridor, (list, tuple)) and len(raw_corridor) >= 3
+        if has_corridor:
+            corridor = [float(v) for v in raw_corridor]
+            n_bins = len(corridor)
+            third = max(1, n_bins // 3)
+            left_corridor = sum(corridor[:third]) / float(third)
+            center_corridor = sum(corridor[third : n_bins - third]) / float(max(1, n_bins - 2 * third))
+            right_corridor = sum(corridor[n_bins - third :]) / float(third)
+            best_heading = max(-1.0, min(1.0, float(ai_status.get("best_heading", 0.0))))
+            open_ratio = max(0.0, min(1.0, float(ai_status.get("open_space_ratio", center_corridor))))
+        else:
+            left_corridor = left_score / 2.0
+            center_corridor = center_score / 2.0
+            right_corridor = right_score / 2.0
+            best_heading = 0.0
+            open_ratio = (left_corridor + center_corridor + right_corridor) / 3.0
+
+        wall_detected = bool(ai_status.get("wall_detected", False))
+        if has_corridor and open_ratio >= 0.30 and abs(best_heading) >= 0.15:
+            self._last_open_heading = best_heading
+            self._last_open_ts = now
+
+        # Active wall or obstacle straight ahead -> brief anti-momentum brake, then smart escape
         if center_score == 0:
             if self._was_forward and now >= self._brake_until:
                 self._brake_until = now + BRAKE_HOLD_S
             self._was_forward = False
 
             if now < self._brake_until:
-                return "BRAKING", "Obstacle ahead — braking before turn", 0.0, 0.0, 0.0
+                return "BRAKING", "Obstacle ahead — braking before maneuver", 0.0, 0.0, 0.0
 
-            # Decide turn direction or respect active turn latch while clearing obstacle
             if now < self._turn_latch_until and self._turn_latch_dir in ("LEFT", "RIGHT"):
                 chosen_dir = self._turn_latch_dir
             elif left_score > right_score:
@@ -283,47 +315,103 @@ class AutonomousController:
             elif right_score > left_score:
                 chosen_dir = "RIGHT"
             elif left_score >= 1 and right_score >= 1:
-                chosen_dir = self._turn_latch_dir if self._turn_latch_dir in ("LEFT", "RIGHT") else "RIGHT"
+                if has_corridor and abs(left_corridor - right_corridor) >= 0.08:
+                    chosen_dir = "LEFT" if left_corridor > right_corridor else "RIGHT"
+                elif has_corridor and abs(best_heading) >= 0.20:
+                    chosen_dir = "LEFT" if best_heading < 0 else "RIGHT"
+                else:
+                    chosen_dir = self._turn_latch_dir if self._turn_latch_dir in ("LEFT", "RIGHT") else "RIGHT"
+            elif has_corridor and max(left_corridor, right_corridor) >= 0.45 and abs(left_corridor - right_corridor) >= 0.14:
+                chosen_dir = "LEFT" if left_corridor > right_corridor else "RIGHT"
             else:
                 chosen_dir = ""
 
             if chosen_dir == "LEFT":
                 self._scan_started_ts = 0.0
+                self._retreat_cycles = 0
                 self._turn_latch_dir = "LEFT"
                 self._turn_latch_until = now + TURN_LATCH_S
-                return "AVOID_LEFT", "Center blocked, Left clearer — rotating left", 0.0, 0.0, -0.80
+                lat = -0.25 if (has_corridor and left_corridor >= 0.56) else 0.0
+                return "AVOID_LEFT", "Center blocked, Left open corridor — maneuvering left", 0.0, lat, -0.80
 
             if chosen_dir == "RIGHT":
                 self._scan_started_ts = 0.0
+                self._retreat_cycles = 0
                 self._turn_latch_dir = "RIGHT"
                 self._turn_latch_until = now + TURN_LATCH_S
-                return "AVOID_RIGHT", "Center blocked, Right clearer — rotating right", 0.0, 0.0, 0.80
+                lat = 0.25 if (has_corridor and right_corridor >= 0.56) else 0.0
+                return "AVOID_RIGHT", "Center blocked, Right open corridor — maneuvering right", 0.0, lat, 0.80
 
-            # All 3 zones blocked: run a bounded low-speed scan rotation, then stop
+            # Flush wall or tight corner dead-end: reverse briefly first to free turning radius
+            remembered_open = (now - self._last_open_ts) <= 4.0 and abs(self._last_open_heading) >= 0.15
+            prefer_left = (
+                (self._last_open_heading < 0)
+                if remembered_open
+                else (left_corridor > right_corridor + 0.05 or self._turn_latch_dir == "LEFT")
+            )
+            if now < self._retreat_until:
+                retreat_omega = -0.30 if prefer_left else 0.30
+                return "RETREAT_BACK", "Wall / corner ahead — backing up into open space", -0.55, 0.0, retreat_omega
+            if (
+                has_corridor
+                and (wall_detected or open_ratio < 0.25)
+                and self._retreat_cycles < 1
+                and self._scan_started_ts <= 0.0
+            ):
+                self._retreat_cycles += 1
+                self._retreat_until = now + RETREAT_HOLD_S
+                retreat_omega = -0.30 if prefer_left else 0.30
+                return "RETREAT_BACK", "Wall / corner ahead — backing up to gain clearance", -0.55, 0.0, retreat_omega
+
+            # All 3 zones blocked: bounded scan rotation toward clearest remembered heading
             if self._scan_started_ts <= 0.0:
                 self._scan_started_ts = now
             if (now - self._scan_started_ts) < MAX_SCAN_ROTATE_S:
-                scan_dir = -0.65 if self._turn_latch_dir == "LEFT" else 0.65
-                return "SCAN_ROTATE", "All zones blocked — scanning for clear exit", 0.0, 0.0, scan_dir
-            return "BLOCKED_STOP", "Surrounded by obstacles — holding position safely", 0.0, 0.0, 0.0
+                scan_dir = -0.72 if prefer_left else 0.72
+                return "SCAN_ROTATE", "Scanning surroundings for open corridor", 0.0, 0.0, scan_dir
+            return "BLOCKED_STOP", "Surrounded by walls/obstacles — holding position safely", 0.0, 0.0, 0.0
 
         self._scan_started_ts = 0.0
+        self._retreat_cycles = 0
         if center_score == 1:
             self._was_forward = True
+            if has_corridor and abs(best_heading) >= 0.15:
+                steer = max(0.35, min(1.0, abs(best_heading)))
+                if best_heading > 0:
+                    return (
+                        "VEER_RIGHT",
+                        "Obstacle ahead — smoothly gliding into right corridor",
+                        0.62,
+                        round(0.42 * steer, 2),
+                        round(0.55 * steer, 2),
+                    )
+                return (
+                    "VEER_LEFT",
+                    "Obstacle ahead — smoothly gliding into left corridor",
+                    0.62,
+                    round(-0.42 * steer, 2),
+                    round(-0.55 * steer, 2),
+                )
             if left_score < right_score:
-                return "VEER_RIGHT", "Center caution — slowing & steering right", 0.55, 0.25, 0.45
+                return "VEER_RIGHT", "Center caution — slowing & steering right", 0.58, 0.28, 0.48
             if right_score < left_score:
-                return "VEER_LEFT", "Center caution — slowing & steering left", 0.55, -0.25, -0.45
+                return "VEER_LEFT", "Center caution — slowing & steering left", 0.58, -0.28, -0.48
             return "CRUISE_CAUTION", "Center caution — moving forward slowly", 0.55, 0.0, 0.0
 
-        # Center is CLEAR
+        # Center is CLEAR — maintain fluid forward progress & hug clearest corridor
         self._was_forward = True
         self._turn_latch_until = 0.0
         if left_score == 0 and right_score >= 1:
-            return "FORWARD_BIAS_RIGHT", "Path clear ahead, avoiding left side obstacle", 0.85, 0.30, 0.15
+            return "FORWARD_BIAS_RIGHT", "Path clear ahead, drifting clear of left wall", 0.85, 0.34, 0.20
         if right_score == 0 and left_score >= 1:
-            return "FORWARD_BIAS_LEFT", "Path clear ahead, avoiding right side obstacle", 0.85, -0.30, -0.15
-        return "FORWARD", "Path clear — moving forward", 1.0, 0.0, 0.0
+            return "FORWARD_BIAS_LEFT", "Path clear ahead, drifting clear of right wall", 0.85, -0.34, -0.20
+        if has_corridor and abs(best_heading) >= 0.25 and open_ratio < 0.90:
+            vx_steer = round(0.32 * best_heading, 2)
+            omega_steer = round(0.36 * best_heading, 2)
+            if best_heading < 0:
+                return "STEER_OPEN_LEFT", "Aligning into wider open corridor on left", 0.90, vx_steer, omega_steer
+            return "STEER_OPEN_RIGHT", "Aligning into wider open corridor on right", 0.90, vx_steer, omega_steer
+        return "FORWARD", "Open corridor clear — moving forward", 1.0, 0.0, 0.0
 
     def step_once(self) -> Dict[str, Any]:
         """Executes a single autonomous perception-and-control cycle."""

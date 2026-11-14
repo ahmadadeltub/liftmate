@@ -198,3 +198,84 @@ def test_mobile_map_page_served(client: TestClient) -> None:
     assert res.status_code == 200
     assert "liftmateOfflineMap" in res.text
     assert "setAppTheme" in res.text
+
+
+def test_autonomous_corridor_threading_and_wall_retreat(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ok, _ = system.serial.connect(port="SIMULATOR", baud_rate=115200)
+    assert ok is True
+    _enable_ready_camera()
+
+    ai_payload = _fake_ai_status(
+        left={"status": "CLEAR CAMERA REGION", "risk": "LOW", "blocked": False},
+        center={"status": "CLEAR CAMERA REGION", "risk": "LOW", "blocked": False},
+        right={"status": "CLEAR CAMERA REGION", "risk": "LOW", "blocked": False},
+        vision_status="CLEAR CAMERA REGION",
+    )
+    ai_payload.update({
+        "corridor_scores": [0.95, 0.96, 0.94, 0.72, 0.65, 0.55, 0.25, 0.15, 0.12],
+        "best_heading": -0.75,
+        "open_space_ratio": 0.58,
+        "wall_detected": True,
+    })
+    monkeypatch.setattr(system.ai_vision, "get_status", lambda: ai_payload)
+
+    res = client.post("/api/autonomous/mode", json={"enabled": True, "speed_pwm": 90})
+    assert res.status_code == 200 and res.json()["ok"] is True
+
+    # 1. Proactive corridor threading slides smoothly toward wider open left gap
+    st_steer = system.autonomous.step_once()
+    assert st_steer["action"] == "STEER_OPEN_LEFT"
+    assert st_steer["vector"]["vy"] > 0.8
+    assert st_steer["vector"]["vx"] < 0
+    assert st_steer["vector"]["omega"] < 0
+
+    # 2. Flush wall dead-end -> brakes, then reverses safely to gain turn radius, then scans
+    ai_payload.update(
+        _fake_ai_status(
+            left={"status": "POTENTIAL OBSTACLE ON LEFT", "risk": "HIGH", "blocked": True},
+            center={"status": "POTENTIAL OBSTACLE AHEAD", "risk": "HIGH", "blocked": True},
+            right={"status": "POTENTIAL OBSTACLE ON RIGHT", "risk": "HIGH", "blocked": True},
+            vision_status="POTENTIAL OBSTACLE – STOP",
+        )
+    )
+    ai_payload.update({
+        "corridor_scores": [0.08] * 9,
+        "best_heading": 0.0,
+        "open_space_ratio": 0.08,
+        "wall_detected": True,
+    })
+    st_brake = system.autonomous.step_once()
+    assert st_brake["action"] == "BRAKING"
+
+    system.autonomous._brake_until = time.time() - 0.05
+    st_retreat = system.autonomous.step_once()
+    assert st_retreat["action"] == "RETREAT_BACK"
+    assert st_retreat["vector"]["vy"] < 0
+
+    system.autonomous._retreat_until = time.time() - 0.05
+    st_scan = system.autonomous.step_once()
+    assert st_scan["action"] == "SCAN_ROTATE"
+    assert abs(st_scan["vector"]["omega"]) > 0.5
+
+    # 3. Right corridor opens -> immediately stops scanning and maneuvers right with lateral assist
+    ai_payload.update(
+        _fake_ai_status(
+            left={"status": "POTENTIAL OBSTACLE ON LEFT", "risk": "HIGH", "blocked": True},
+            center={"status": "POTENTIAL OBSTACLE AHEAD", "risk": "HIGH", "blocked": True},
+            right={"status": "CLEAR CAMERA REGION", "risk": "LOW", "blocked": False},
+            vision_status="POTENTIAL OBSTACLE AHEAD",
+        )
+    )
+    ai_payload.update({
+        "corridor_scores": [0.10, 0.10, 0.10, 0.15, 0.12, 0.18, 0.85, 0.92, 0.90],
+        "best_heading": 0.75,
+        "open_space_ratio": 0.36,
+        "wall_detected": True,
+    })
+    st_avoid_r = system.autonomous.step_once()
+    assert st_avoid_r["action"] == "AVOID_RIGHT"
+    assert st_avoid_r["vector"]["omega"] > 0
+    assert st_avoid_r["vector"]["vx"] > 0

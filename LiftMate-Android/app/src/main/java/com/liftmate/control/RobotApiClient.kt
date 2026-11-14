@@ -328,6 +328,7 @@ class RobotApiClient(private val context: Context) {
                         "is_car",
                         labelLower in setOf("car", "truck", "bus", "vehicle"),
                     )
+                    val isWallBox = labelLower in setOf("wall", "barrier")
                     boxes.add(
                         DetectionBox(
                             label = rawLabel,
@@ -335,8 +336,17 @@ class RobotApiClient(private val context: Context) {
                             bboxNorm = norm,
                             region = d.optString("region", "CENTER"),
                             isCar = isVehicle,
+                            isWall = isWallBox,
                         ),
                     )
+                }
+            }
+
+            val corridorScoresList = ArrayList<Float>()
+            val corridorArr = aiJson?.optJSONArray("corridor_scores")
+            if (corridorArr != null) {
+                for (i in 0 until corridorArr.length()) {
+                    corridorScoresList.add(corridorArr.optDouble(i, 1.0).toFloat().coerceIn(0f, 1f))
                 }
             }
 
@@ -349,8 +359,13 @@ class RobotApiClient(private val context: Context) {
                 regions = regionsMap,
                 warnings = warnings,
                 detections = boxes,
-                personCount = counts?.optInt("person", 0) ?: 0,
-                carCount = counts?.optInt("car", 0) ?: 0,
+                personCount = counts?.optInt("person", 0) ?: aiJson?.optInt("person_count", 0) ?: 0,
+                carCount = counts?.optInt("car", 0) ?: aiJson?.optInt("car_count", 0) ?: 0,
+                corridorScores = corridorScoresList,
+                bestHeading = aiJson?.optDouble("best_heading", 0.0)?.toFloat()?.coerceIn(-1f, 1f) ?: 0f,
+                openSpaceRatio = aiJson?.optDouble("open_space_ratio", 1.0)?.toFloat()?.coerceIn(0f, 1f) ?: 1f,
+                wallDetected = aiJson?.optBoolean("wall_detected", false) ?: false,
+                recommendedPath = aiJson?.optString("recommended_path", "FORWARD") ?: "FORWARD",
             )
 
             val autoSnap = AutonomousSnapshot(
