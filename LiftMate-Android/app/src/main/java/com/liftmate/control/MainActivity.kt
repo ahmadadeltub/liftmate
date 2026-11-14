@@ -79,6 +79,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var tvBrandBadge: TextView
     private lateinit var tvBrandTitle: TextView
     private lateinit var tvTopStatus: TextView
+    private lateinit var btnPowerOff: Button
     private lateinit var btnThemeToggle: Button
     private lateinit var btnResetAll: Button
     private lateinit var btnStopAll: Button
@@ -167,6 +168,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var tvTelemetryDetails: TextView
     private lateinit var btnConfigureHost: Button
     private lateinit var btnOpenSpareWeb: Button
+    private lateinit var btnTelemetryPowerOff: Button
 
     // Interactive robotics control state
     @Volatile
@@ -252,6 +254,7 @@ class MainActivity : ComponentActivity() {
         tvBrandBadge = findViewById(R.id.tvBrandBadge)
         tvBrandTitle = findViewById(R.id.tvBrandTitle)
         tvTopStatus = findViewById(R.id.tvTopStatus)
+        btnPowerOff = findViewById(R.id.btnPowerOff)
         btnThemeToggle = findViewById(R.id.btnThemeToggle)
         btnResetAll = findViewById(R.id.btnResetAll)
         btnStopAll = findViewById(R.id.btnStopAll)
@@ -335,6 +338,7 @@ class MainActivity : ComponentActivity() {
         tvTelemetryDetails = findViewById(R.id.tvTelemetryDetails)
         btnConfigureHost = findViewById(R.id.btnConfigureHost)
         btnOpenSpareWeb = findViewById(R.id.btnOpenSpareWeb)
+        btnTelemetryPowerOff = findViewById(R.id.btnTelemetryPowerOff)
 
         faderServo.isSticky = true
         faderServo.accentStartHex = "#F472B6"
@@ -423,6 +427,8 @@ class MainActivity : ComponentActivity() {
         btnConfigureHost.setOnClickListener { showConnectionDialog() }
         btnOpenWifi.setOnClickListener { openWifiSettings() }
         btnOpenSpareWeb.setOnClickListener { openSpareWebpage() }
+        btnPowerOff.setOnClickListener { showShutdownConfirmationDialog() }
+        btnTelemetryPowerOff.setOnClickListener { showShutdownConfirmationDialog() }
 
         btnThemeToggle.setOnClickListener {
             vibrateShort(15L)
@@ -753,6 +759,10 @@ class MainActivity : ComponentActivity() {
         }
         btnOpenWifi.setTextColor(palette.cyan)
         btnOpenSpareWeb.setTextColor(palette.cyan)
+        for (pBtn in listOf(btnPowerOff, btnTelemetryPowerOff)) {
+            pBtn.background = palette.dangerPillDrawable()
+            pBtn.setTextColor(palette.red)
+        }
 
         omniJoystick.setLightTheme(isLight)
         for (fader in listOf(faderJack, faderHolder, faderBoth, faderServo)) {
@@ -850,6 +860,55 @@ class MainActivity : ComponentActivity() {
         stopLocalMotionState()
         postSimpleControl(ControlPayloadFormatter.buildSimpleModeJson("STOP_ALL"))
         Toast.makeText(this, "STOP ALL sent to robot", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showShutdownConfirmationDialog() {
+        vibrateShort(35L)
+        val dialogStyle = if (isLightTheme) {
+            android.R.style.Theme_Material_Light_Dialog_Alert
+        } else {
+            android.R.style.Theme_Material_Dialog_Alert
+        }
+        AlertDialog.Builder(this, dialogStyle)
+            .setTitle("Shutdown Robot & Raspberry Pi?")
+            .setMessage(
+                "This safely turns off the robot software and Raspberry Pi 3 OS without extra shutdown hardware:\n\n" +
+                    "• Stops all Mecanum wheels, linear actuators, servo & Autonomous mode\n" +
+                    "• Locks Arduino Mega 2560 in safe E-STOP & cuts USB hub 5V if supported\n" +
+                    "• Cleanly powers off Raspberry Pi 3 OS to protect the SD card\n\n" +
+                    "Wait until the green Pi ACT LED stops blinking before switching off the main battery.",
+            )
+            .setPositiveButton("Shutdown Now") { _, _ -> triggerSystemShutdown() }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun triggerSystemShutdown() {
+        vibrateShort(65L)
+        stopLocalMotionState()
+        tvTopStatus.text = "Shutting down robot & Raspberry Pi OS…"
+        tvTopStatus.setTextColor(palette.red)
+        commandExecutor.execute {
+            val resp = apiClient.shutdownSystem(cutUsbPower = true)
+            mainHandler.post {
+                if (resp == null) {
+                    Toast.makeText(
+                        this,
+                        "Robot unreachable — connect Wi-Fi to SSID 'LiftMate'",
+                        Toast.LENGTH_LONG,
+                    ).show()
+                } else {
+                    val msg = resp.optString(
+                        "message",
+                        "Shutdown scheduled. Switch off battery after green Pi LED stops.",
+                    )
+                    bannerConnectionAlert.visibility = View.VISIBLE
+                    tvConnectionBannerMsg.text = msg
+                    tvConnectionBannerMsg.setTextColor(palette.red)
+                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     private fun stopLocalMotionState() {

@@ -47,6 +47,10 @@ class RobotModelsTest {
             """{"enabled":false,"speed_pwm":55}""",
             ControlPayloadFormatter.buildAutonomousJson(false, 10),
         )
+        assertEquals(
+            """{"confirm":true,"cut_usb_power":true,"reason":"Mobile operator shutdown"}""",
+            ControlPayloadFormatter.buildSystemShutdownJson(),
+        )
     }
 
     @Test

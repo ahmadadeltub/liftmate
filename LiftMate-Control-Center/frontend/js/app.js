@@ -90,6 +90,35 @@ async function clearFaults() {
   fetchDiagnosticsEvents();
 }
 
+function openDiagnosticsShutdownModal() {
+  const modal = document.getElementById("diagShutdownModal");
+  const btn = document.getElementById("btnConfirmDiagShutdown");
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "⏻ Shutdown Now";
+  }
+  if (modal) modal.style.display = "flex";
+}
+
+function closeDiagnosticsShutdownModal() {
+  const modal = document.getElementById("diagShutdownModal");
+  if (modal) modal.style.display = "none";
+}
+
+async function executeDiagnosticsShutdown() {
+  stopActiveHold();
+  const btn = document.getElementById("btnConfirmDiagShutdown");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Shutting down...";
+  }
+  const resp = await apiPost("/api/system/shutdown", { confirm: true, cut_usb_power: true });
+  closeDiagnosticsShutdownModal();
+  if (resp && resp.message) {
+    showToast(resp.message, resp.poweroff_scheduled ? "warn" : "info");
+  }
+}
+
 /* ==================== SERIAL & DIAGNOSTICS ==================== */
 async function connectSerial() {
   const port = document.getElementById("serialPortSelect").value || "auto";

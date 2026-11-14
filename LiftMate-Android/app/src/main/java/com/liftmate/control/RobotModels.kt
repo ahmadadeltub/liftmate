@@ -114,4 +114,12 @@ object ControlPayloadFormatter {
 
     fun buildAutonomousJson(enabled: Boolean, speedPwm: Int): String =
         """{"enabled":$enabled,"speed_pwm":${clampAutonomousSpeed(speedPwm)}}"""
+
+    fun buildSystemShutdownJson(
+        cutUsbPower: Boolean = true,
+        reason: String = "Mobile operator shutdown",
+    ): String {
+        val safeReason = reason.replace("\"", "").replace("\n", " ").trim()
+        return """{"confirm":true,"cut_usb_power":$cutUsbPower,"reason":"$safeReason"}"""
+    }
 }

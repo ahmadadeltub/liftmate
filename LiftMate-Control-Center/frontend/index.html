@@ -44,6 +44,7 @@
       <button id="btnResetEstop" class="btn btn-cyan" onclick="resetEmergencyStop()" style="display:none;">RESET E-STOP</button>
       <button id="btnStopAll" class="btn btn-stop-all" onclick="stopAllNow()">STOP ALL</button>
       <button id="btnLatchEstop" class="btn btn-estop-latch" onclick="triggerEmergencyStop()">E-STOP LATCH</button>
+      <button id="btnSystemShutdown" class="btn btn-estop-latch" onclick="openDiagnosticsShutdownModal()">⏻ POWER OFF</button>
     </div>
   </header>
 
@@ -812,6 +813,20 @@
       </section>
 
     </main>
+  </div>
+
+  <!-- Shutdown Confirmation Dialog -->
+  <div id="diagShutdownModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(3,7,18,0.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;">
+    <div style="width:100%;max-width:440px;background:#0f172a;border:1.5px solid rgba(239,68,68,0.6);border-radius:16px;padding:18px;color:#f8fafc;box-shadow:0 24px 60px rgba(0,0,0,0.65);">
+      <h3 style="margin-bottom:8px;color:#f87171;">⏻ Shutdown Robot &amp; Raspberry Pi OS?</h3>
+      <p style="font-size:13px;line-height:1.5;color:#cbd5e1;margin-bottom:14px;">
+        Stops all motors/actuators/servo, latches Arduino Mega 2560 in safe E-STOP (cuts USB hub power if supported), and runs a clean Raspberry Pi 3 OS poweroff. Switch off the main battery once the green ACT LED stops blinking.
+      </p>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn" onclick="closeDiagnosticsShutdownModal()">Cancel</button>
+        <button class="btn btn-stop-all" id="btnConfirmDiagShutdown" onclick="executeDiagnosticsShutdown()">⏻ Shutdown Now</button>
+      </div>
+    </div>
   </div>
 
   <script src="/js/app.js"></script>

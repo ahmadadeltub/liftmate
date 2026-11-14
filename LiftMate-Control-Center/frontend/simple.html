@@ -228,6 +228,21 @@
       justify-content: center;
     }
 
+    .theme-btn.power-btn {
+      background: rgba(239, 68, 68, 0.16);
+      border-color: rgba(239, 68, 68, 0.50);
+      color: #f87171;
+      font-weight: 900;
+    }
+    :root[data-theme="light"] .theme-btn.power-btn {
+      background: rgba(220, 38, 38, 0.10);
+      border-color: rgba(220, 38, 38, 0.35);
+      color: #dc2626;
+    }
+    .theme-btn.power-btn:active {
+      transform: scale(0.95);
+    }
+
     .reset-btn {
       height: clamp(32px, 4.4dvh, 38px);
       padding: 0 clamp(10px, 3vw, 15px);
@@ -1208,6 +1223,7 @@
       </div>
       <div class="top-actions">
         <a href="/diagnostics" class="pro-link-btn" title="Open Pro 10-Panel Diagnostics">Pro</a>
+        <button class="theme-btn power-btn" id="powerOffBtn" onclick="openShutdownModal()" title="Shutdown Robot & Raspberry Pi OS">⏻</button>
         <button class="theme-btn" onclick="toggleTheme()" title="Light / Dark Mode">
           <span id="themeIcon">☀️</span>
         </button>
@@ -1461,6 +1477,39 @@
         </button>
         <button class="sust-btn-remove" id="sustModalRemoveBtn">
           🗑️ Remove Pin
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ROBOT & RASPBERRY PI SHUTDOWN MODAL ==================== -->
+  <div class="sust-modal-backdrop" id="shutdownModalBackdrop" onclick="if(event.target===this) closeShutdownModal()">
+    <div class="sust-modal-card" style="border-color: rgba(239, 68, 68, 0.58);">
+      <div class="sust-header">
+        <div class="sust-title" style="color: #ef4444;">
+          <span>⏻</span>
+          <span>Full Robot Power Off</span>
+        </div>
+        <button class="theme-btn" onclick="closeShutdownModal()" title="Close">✕</button>
+      </div>
+
+      <div class="sust-box">
+        <h4>Safe Shutdown Sequence (No Extra Hardware Needed)</h4>
+        <ul class="sust-list">
+          <li>Stops all Mecanum wheels, linear actuators, servo &amp; Autonomous AI mode.</li>
+          <li>Locks the USB-connected <b>Arduino Mega 2560</b> in safe <b>E-STOP</b> and cuts USB hub power if supported by Raspberry Pi 3.</li>
+          <li>Cleanly halts <b>Raspberry Pi 3 OS</b> to protect the microSD card before you switch off the battery.</li>
+        </ul>
+      </div>
+
+      <div class="sust-box" id="shutdownModalStatus" style="display:none; font-weight:800;"></div>
+
+      <div class="sust-actions">
+        <button class="sust-btn-keep" style="background: var(--btn-surface); color: var(--text-main); border: 1px solid var(--border-subtle);" onclick="closeShutdownModal()">
+          Cancel
+        </button>
+        <button class="sust-btn-remove" id="confirmShutdownBtn" onclick="executeSystemShutdown()">
+          ⏻ Shutdown Robot &amp; Pi
         </button>
       </div>
     </div>
@@ -1859,6 +1908,67 @@
       }
 
       sendControl({ mode: "RESET_ALL", servo_angle: SERVO_MIN_DEG });
+    }
+
+    function openShutdownModal() {
+      const modal = document.getElementById("shutdownModalBackdrop");
+      const statusBox = document.getElementById("shutdownModalStatus");
+      const btn = document.getElementById("confirmShutdownBtn");
+      if (statusBox) {
+        statusBox.style.display = "none";
+        statusBox.textContent = "";
+      }
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "⏻ Shutdown Robot & Pi";
+      }
+      if (modal) modal.classList.add("open");
+    }
+
+    function closeShutdownModal() {
+      const modal = document.getElementById("shutdownModalBackdrop");
+      if (modal) modal.classList.remove("open");
+    }
+
+    function executeSystemShutdown() {
+      cancelActiveGestures();
+      wheelVec = { vx: 0, vy: 0, w: 0, active: false };
+      actVec = { upper: 0, lower: 0 };
+      setPuckPosition(0, 0);
+      renderBiDirectionalFader("Upper", 0);
+      renderBiDirectionalFader("Lower", 0);
+      renderBiDirectionalFader("Both", 0);
+
+      const statusBox = document.getElementById("shutdownModalStatus");
+      const btn = document.getElementById("confirmShutdownBtn");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Shutting down...";
+      }
+      if (statusBox) {
+        statusBox.style.display = "block";
+        statusBox.textContent = "Halting Arduino Mega outputs & scheduling Raspberry Pi OS poweroff...";
+      }
+
+      fetch("/api/system/shutdown", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: true, cut_usb_power: true }),
+      })
+        .then((res) => res.json().catch(() => null))
+        .then((data) => {
+          const msg = (data && data.message)
+            ? data.message
+            : "Shutdown command delivered. Switch off battery after green Pi LED stops blinking.";
+          if (statusBox) statusBox.textContent = msg;
+          updateHwToast(`⏻ ${msg}`, true);
+          if (btn) btn.textContent = data && data.poweroff_scheduled ? "Powering Off..." : "Robot Halted";
+        })
+        .catch(() => {
+          const fallbackMsg = "Raspberry Pi OS shutdown in progress. Switch off battery once green LED stops.";
+          if (statusBox) statusBox.textContent = fallbackMsg;
+          updateHwToast(`⏻ ${fallbackMsg}`, true);
+        });
     }
 
     /* ==================== KEEP-ALIVE HEARTBEAT ==================== */

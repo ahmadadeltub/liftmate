@@ -66,6 +66,16 @@ data class ThemePalette(
         return RippleDrawable(ColorStateList.valueOf(rippleColor), shape, shape)
     }
 
+    fun dangerPillDrawable(cornerRadiusPx: Float = 26f): Drawable {
+        val shape = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = cornerRadiusPx
+            setColor(Color.parseColor(if (isLight) "#FEE2E2" else "#33EF4444"))
+            setStroke(2, Color.parseColor(if (isLight) "#DC2626" else "#99F87171"))
+        }
+        return RippleDrawable(ColorStateList.valueOf(Color.parseColor("#44EF4444")), shape, shape)
+    }
+
     fun gradientPillDrawable(startHex: String, endHex: String, borderHex: String, cornerRadiusPx: Float = 26f): Drawable {
         val shape = GradientDrawable(
             GradientDrawable.Orientation.TL_BR,

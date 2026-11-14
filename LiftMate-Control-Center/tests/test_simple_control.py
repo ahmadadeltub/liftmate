@@ -116,3 +116,51 @@ def test_estop_blocks_motion_and_reset_all_recovers(client: TestClient) -> None:
     drive_res = client.post("/api/simple/control", json={"mode": "WHEELS", "vy": 90, "vx": 0, "omega": 0})
     assert drive_res.status_code == 200
     assert drive_res.json()["ok"] is True
+
+
+def test_system_shutdown_requires_confirm_and_halts_robot(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    ok, _ = system.serial.connect(port="SIMULATOR", baud_rate=115200)
+    assert ok is True
+    system.safety.arm()
+
+    # Unconfirmed call must be rejected cleanly
+    unconf = client.post("/api/system/shutdown", json={"confirm": False})
+    assert unconf.status_code == 200
+    assert unconf.json()["ok"] is False
+    assert unconf.json()["poweroff_scheduled"] is False
+    assert system.serial.connected is True
+
+    # Non-Pi host skips OS poweroff while cleanly stopping/latching/disconnecting controller
+    non_pi = client.post("/api/system/shutdown", json={"confirm": True, "cut_usb_power": True})
+    assert non_pi.status_code == 200
+    non_pi_data = non_pi.json()
+    assert non_pi_data["ok"] is True
+    assert non_pi_data["poweroff_scheduled"] is False
+    assert system.safety.estop_latched is True
+    assert system.serial.connected is False
+
+    # Simulated Raspberry Pi host schedules detached poweroff command cleanly
+    spawned_cmds = []
+
+    class DummyProc:
+        pid = 9999
+
+    def fake_popen(cmd, **kwargs):
+        spawned_cmds.append(cmd)
+        return DummyProc()
+
+    monkeypatch.setattr(system, "is_raspberry_pi_host", lambda: True)
+    monkeypatch.setattr("backend.app.main.subprocess.Popen", fake_popen)
+
+    ok2, _ = system.serial.connect(port="SIMULATOR", baud_rate=115200)
+    assert ok2 is True
+    system.safety.reset_emergency_stop()
+    system.safety.arm()
+
+    pi_res = client.post("/api/system/shutdown", json={"confirm": True, "cut_usb_power": True})
+    assert pi_res.status_code == 200
+    pi_data = pi_res.json()
+    assert pi_data["ok"] is True
+    assert pi_data["poweroff_scheduled"] is True
+    assert len(spawned_cmds) == 1
+    assert system.serial.connected is False

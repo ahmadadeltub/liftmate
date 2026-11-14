@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import platform
+import subprocess
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -164,6 +168,12 @@ class AIConfigRequest(BaseModel):
     mode: Optional[str] = None
 
 
+class SystemShutdownRequest(BaseModel):
+    confirm: bool = False
+    cut_usb_power: bool = True
+    reason: Optional[str] = "Operator initiated full robot shutdown"
+
+
 class LiftMateSystem:
     """Container holding all coordinated hardware and safety controllers."""
 
@@ -263,6 +273,117 @@ class LiftMateSystem:
             self.serial.disconnect("Application shutdown")
         except Exception:
             pass
+
+    @staticmethod
+    def is_raspberry_pi_host() -> bool:
+        """Returns True only when running on a physical Raspberry Pi Linux host."""
+        if os.environ.get("LIFTMATE_FORCE_POWEROFF") == "1":
+            return True
+        if platform.system() != "Linux":
+            return False
+        model_path = Path("/proc/device-tree/model")
+        if model_path.exists():
+            try:
+                model_text = model_path.read_text(encoding="utf-8", errors="ignore").lower()
+                return "raspberry pi" in model_text
+            except Exception:
+                return False
+        return False
+
+    def initiate_poweroff(
+        self,
+        cut_usb_power: bool = True,
+        reason: str = "Operator initiated full robot shutdown",
+    ) -> Dict[str, Any]:
+        """Halts all actuators/motors, locks Arduino Mega in safe E-STOP, and schedules Pi OS poweroff."""
+        self.diagnostics.log_event("WARNING", "SAFETY", "SYSTEM_SHUTDOWN_INITIATED", reason)
+        try:
+            self.autonomous.manual_override(reason)
+            self.autonomous.stop()
+        except Exception:
+            pass
+        try:
+            self.serial.stop_auto_reconnect()
+        except Exception:
+            pass
+        try:
+            self.stop_all_outputs(reason)
+        except Exception:
+            pass
+        if self.serial.connected:
+            try:
+                self.serial.send_command("ESTOP")
+                time.sleep(0.08)
+            except Exception:
+                pass
+        try:
+            self.safety.trigger_emergency_stop(reason)
+        except Exception:
+            pass
+        try:
+            self.camera.stop()
+        except Exception:
+            pass
+        try:
+            self.serial.disconnect(reason)
+        except Exception:
+            pass
+
+        if not self.is_raspberry_pi_host():
+            return {
+                "ok": True,
+                "poweroff_scheduled": False,
+                "usb_power_cut_requested": bool(cut_usb_power),
+                "host_platform": platform.system(),
+                "message": (
+                    "All motors, actuators, servo & Mega outputs locked safely. "
+                    "OS poweroff skipped on non-Raspberry Pi host."
+                ),
+            }
+
+        helper_path = Path("/usr/local/bin/liftmate-poweroff.sh")
+        usb_arg = "1" if cut_usb_power else "0"
+        is_root = hasattr(os, "geteuid") and os.geteuid() == 0
+
+        if helper_path.exists():
+            cmd = [str(helper_path), usb_arg] if is_root else ["sudo", "-n", str(helper_path), usb_arg]
+        else:
+            power_cmd = ["systemctl", "poweroff"]
+            inline_sh = (
+                "sleep 1.2 && sync && systemctl poweroff || shutdown -h now"
+            )
+            cmd = ["bash", "-c", inline_sh] if is_root else ["sudo", "-n", "bash", "-c", inline_sh]
+            if is_root is False and not Path("/usr/bin/sudo").exists():
+                cmd = power_cmd
+
+        try:
+            subprocess.Popen(
+                cmd,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+                close_fds=True,
+            )
+            return {
+                "ok": True,
+                "poweroff_scheduled": True,
+                "usb_power_cut_requested": bool(cut_usb_power),
+                "host_platform": platform.system(),
+                "message": (
+                    "All motors & Mega outputs locked in E-STOP. "
+                    "Shutting down Raspberry Pi OS cleanly in 1s — switch off battery once green LED stops."
+                ),
+            }
+        except Exception as exc:
+            self.diagnostics.log_event("ERROR", "SAFETY", "SYSTEM_SHUTDOWN_FAILED", str(exc))
+            return {
+                "ok": False,
+                "poweroff_scheduled": False,
+                "usb_power_cut_requested": bool(cut_usb_power),
+                "host_platform": platform.system(),
+                "message": f"Robot halted safely, but OS poweroff failed: {exc}",
+            }
 
 
 system = LiftMateSystem()
@@ -608,6 +729,21 @@ async def safety_clear_fault() -> Dict[str, Any]:
     system.diagnostics.clear_fault_counters()
     ok, msg = system.safety.clear_fault()
     return {"ok": ok, "message": msg, "state": system.get_full_state()}
+
+
+@app.post("/api/system/shutdown")
+async def system_shutdown(req: SystemShutdownRequest) -> Dict[str, Any]:
+    """Safely halts robot hardware, locks Mega in E-STOP, and shuts down Raspberry Pi OS."""
+    if not req.confirm:
+        return {
+            "ok": False,
+            "poweroff_scheduled": False,
+            "message": "Shutdown requires explicit confirmation (confirm=true).",
+        }
+    return system.initiate_poweroff(
+        cut_usb_power=req.cut_usb_power,
+        reason=req.reason or "Operator initiated full robot shutdown",
+    )
 
 
 # ==================== WHEEL MOTOR & MECANUM ENDPOINTS ====================

@@ -208,6 +208,13 @@ class RobotApiClient(private val context: Context) {
     fun postEmpty(path: String): JSONObject? =
         postJson(path, "{}", timeoutMs = 950)
 
+    fun shutdownSystem(cutUsbPower: Boolean = true): JSONObject? =
+        postJson(
+            "/api/system/shutdown",
+            ControlPayloadFormatter.buildSystemShutdownJson(cutUsbPower = cutUsbPower),
+            timeoutMs = 2500,
+        )
+
     fun fetchCameraFrame(): Bitmap? {
         val base = activeBaseUrlRef.get() ?: return null
         var conn: HttpURLConnection? = null

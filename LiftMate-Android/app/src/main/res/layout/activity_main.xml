@@ -66,6 +66,25 @@
         </LinearLayout>
 
         <Button
+            android:id="@+id/btnPowerOff"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/bg_pill_button"
+            android:contentDescription="Shutdown Robot and Raspberry Pi OS"
+            android:drawableStart="@drawable/ic_power_off"
+            android:minWidth="0dp"
+            android:paddingStart="9dp"
+            android:paddingTop="0dp"
+            android:paddingEnd="9dp"
+            android:paddingBottom="0dp"
+            android:singleLine="true"
+            android:text=""
+            android:textAllCaps="false"
+            android:textColor="#EF4444"
+            android:textSize="0sp" />
+
+        <Button
             android:id="@+id/btnThemeToggle"
             android:layout_width="wrap_content"
             android:layout_height="34dp"
@@ -1079,6 +1098,25 @@
                         android:textSize="11.5sp"
                         android:textStyle="bold" />
                 </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnTelemetryPowerOff"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_pill_button"
+                    android:drawableStart="@drawable/ic_power_off"
+                    android:drawablePadding="8dp"
+                    android:ellipsize="end"
+                    android:minWidth="0dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:singleLine="true"
+                    android:text="Shutdown Robot &amp; Raspberry Pi OS"
+                    android:textAllCaps="false"
+                    android:textColor="#EF4444"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
         </LinearLayout>
